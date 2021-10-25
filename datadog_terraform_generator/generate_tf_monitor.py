@@ -1,40 +1,21 @@
 #! /usr/bin/env python3
 import os
+from os.path import exists
+
 import yaml
 from typing import Any, Dict
 
-from datadog_terraform_generator.gen_utils import get_arg_parser
-
-
-def fill_template(template: str, vals: Dict[str, Any]) -> str:
-    output = template
-    for _ in range(100):
-        changes_applied = False
-        for ky, vl in vals.items():
-            ky_upper = ky.upper()
-            if ky_upper in output:
-                output = output.replace(ky_upper, vl)
-                changes_applied = True
-        if not changes_applied:
-            break
-    return output
-
-
-def get_local_abs_path(file_name):
-    return os.path.join(os.path.dirname(__file__), file_name)
+from datadog_terraform_generator.gen_utils import (
+    get_arg_parser,
+    get_local_abs_path,
+    get_package_file_contents,
+    fill_template,
+)
 
 
 def generate(output_dir, **vals: Dict[str, Any]):
-    with open(get_local_abs_path("tf-monitor-template.tf"), "r") as mon_template_fl:
-        mon_template = mon_template_fl.read()
-
-    with open(
-        get_local_abs_path("tf-monitor-variables-template.tf"), "r"
-    ) as mon_vars_template_fl:
-        mon_vars_template = mon_vars_template_fl.read()
-
-    if os.getcwd().endswith("utils"):
-        output_dir = f"../{output_dir}"
+    mon_template = get_package_file_contents("tf-monitor-template.tf")
+    mon_vars_template = get_package_file_contents("tf-monitor-variables-template.tf")
 
     file_name = vals["module_name"].replace("_", "-") + ".tf"
     while "--" in file_name:
@@ -52,13 +33,17 @@ def generate(output_dir, **vals: Dict[str, Any]):
         mon_vars_fl.write(mon_vars_str)
 
 
-def load_defaults():
-    with open(get_local_abs_path("tf_monitor_defaults.yaml"), "r") as fl:
+def load_search_replace_defaults():
+    if exists("tf_monitor_defaults.yaml"):
+        defaults_path = "tf_monitor_defaults.yaml"
+    else:
+        defaults_path = get_local_abs_path("tf_monitor_defaults.yaml")
+    with open(defaults_path, "r") as fl:
         return yaml.safe_load(fl)
 
 
 def main():
-    defaults = load_defaults()
+    defaults = load_search_replace_defaults()
     parser = get_arg_parser()
     for ky, vl in defaults.items():
         parser.add_argument(f"--{ky}", default=vl)

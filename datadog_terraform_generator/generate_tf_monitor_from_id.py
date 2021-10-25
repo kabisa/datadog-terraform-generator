@@ -1,7 +1,10 @@
 import re
 
 from datadog_terraform_generator.gen_utils import get_arg_parser, DdApi, find_between
-from datadog_terraform_generator.generate_tf_monitor import load_defaults, generate
+from datadog_terraform_generator.generate_tf_monitor import (
+    load_search_replace_defaults,
+    generate,
+)
 
 
 def get_after_comp_loc(query):
@@ -35,7 +38,6 @@ def pull_generic_check(dd_api: DdApi, monitor_id):
         check_name_cased = name_parts[-2].strip()
     else:
         check_name_cased = name_parts[-1].strip()
-    print("Cased", check_name_cased)
     module_name = re.sub(r"[^\w]", "_", check_name_cased).lower()
     m = re.search(r"{([^}]+)}", query_rest)
     filter_str = m.group(1)
@@ -63,7 +65,7 @@ def pull_generic_check(dd_api: DdApi, monitor_id):
         f"{time_agg_fun}(${{var.MODULE_NAME_evaluation_period}})",
     ).replace(filter_str, "${local.MODULE_NAME_filter}")
     print(data)
-    vals = load_defaults()
+    vals = load_search_replace_defaults()
     vals.update(
         {
             "module_name": module_name,

@@ -1,6 +1,16 @@
 
 # Terraform code generator for Datadog
 
+## Usage
+
+```bash
+ddtfgen 
+├─ -h                     # prints out help
+├── init                  # initialize configuration
+├── monitor_from_template # generate monitor based on generic monitor template
+├── monitor_from_id       # generate monitor based on generic monitor template, but starts with existing monitor ID as input
+
+```
 
 ## Developing
 
@@ -14,3 +24,4 @@ Pip install in edit mode:
 ```bash
 pip install -e .
 ```
+

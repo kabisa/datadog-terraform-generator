@@ -1,10 +1,13 @@
 import argparse
 import os
-from os.path import expanduser, exists, join
-from typing import Dict
+from typing import Dict, Any
 
-import requests
-import yaml
+
+from datadog_terraform_generator.config_management import load_config
+
+
+def get_local_abs_path(file_name):
+    return os.path.join(os.path.dirname(__file__), file_name)
 
 
 def find_between(inp, first, last):
@@ -16,10 +19,37 @@ def find_between(inp, first, last):
         return ""
 
 
-def print_hcl(mydict, indent=0, quote_keys=False, indent_str="  "):
+def get_package_file_contents(file_name):
+    with open(get_local_abs_path(file_name), "r") as fl:
+        return fl.read()
+
+
+def fill_template(template: str, vals: Dict[str, Any]) -> str:
+    """
+    Takes a template string and a dict of mappings
+    The keys of this dict will be uppercased
+    Those uppercased keys wil then be replaced in the template string
+    The process stops once no change have been applied for a while
+    Note that the replaced value can contain keywords that should be replaced
+    That's why we keep trying for a few times
+    """
+    output = template
+    for _ in range(100):
+        changes_applied = False
+        for ky, vl in vals.items():
+            ky_upper = ky.upper()
+            if ky_upper in output:
+                output = output.replace(ky_upper, vl)
+                changes_applied = True
+        if not changes_applied:
+            break
+    return output
+
+
+def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
     """
     Produces a multi-line string for use in terraform tfvars file from a dictionary
-    :param mydict: Dict
+    :param input_dict: Dict
     :param indent: Should the lines be idented or not
     :return s: Multi-line String in hcl format
 
@@ -27,7 +57,7 @@ def print_hcl(mydict, indent=0, quote_keys=False, indent_str="  "):
     """
 
     s = ""
-    for key, val in mydict.items():
+    for key, val in input_dict.items():
         s += indent_str * indent
         if isinstance(val, dict):
             use_equal_sign = not key.startswith("_")
@@ -115,46 +145,9 @@ def print_hcl(mydict, indent=0, quote_keys=False, indent_str="  "):
     return s
 
 
-def init_config(config_file_path):
-    config_name = input("Config name:")
-    datadog_url = input("Datadog url [https://app.datadoghq.eu/]:")
-    if not datadog_url:
-        datadog_url = "https://app.datadoghq.eu/"
-
-    api_key = input("Api Key")
-    app_key = input("Application Key")
-
-    config = {
-        "configs": {
-            config_name: {
-                "datadog_url": datadog_url,
-                "api_key": api_key,
-                "app_key": app_key,
-            }
-        },
-        "current_config": config_name,
-    }
-    with open(config_file_path, "w") as fl:
-        yaml.safe_dump(config, fl, indent=2, sort_keys=True)
-
-
-def get_config() -> Dict:
-    home = expanduser("~")
-    config_dir = join(home, ".datadog_terraform_generator")
-    if not exists(config_dir):
-        os.mkdir(config_dir)
-
-    config_file = join(config_dir, "config.yaml")
-    if not exists(config_file):
-        init_config(config_file)
-
-    with open(config_file, "r") as fl:
-        return yaml.safe_load(fl)
-
-
 def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    config = get_config()
+    config = load_config()
     parser.add_argument(
         "--current_config",
         help="selects config from ~/.datadog_terraform_generator/config.yaml",
@@ -177,27 +170,3 @@ def get_arg_parser() -> argparse.ArgumentParser:
         default=os.environ.get("APP_KEY", current_config["app_key"]),
     )
     return parser
-
-
-class DdApi:
-    def __init__(self, api_host, api_key, app_key):
-        self.api_host = api_host
-        self.api_key = api_key
-        self.app_key = app_key
-
-    def request(self, path):
-        url = f"{self.api_host}{path}"
-        req = requests.get(
-            url,
-            headers={
-                "DD-API-KEY": self.api_key,
-                "DD-APPLICATION-KEY": self.app_key,
-                "Content-Type": "application/json",
-            },
-        )
-        req.raise_for_status()
-        return req.json()
-
-    @classmethod
-    def from_args(cls, args):
-        return cls(api_host=args.api_host, api_key=args.api_key, app_key=args.app_key)
