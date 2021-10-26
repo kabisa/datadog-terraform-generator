@@ -26,6 +26,9 @@ def generate_module(module_path, service_name, min_provider_version):
         tf = get_package_file_contents(packaged_file)
         write_module_file(module_path, output_file, tf, replacements)
 
+    # empty main.tf
+    write_module_file(module_path, "main.tf", "\n", {})
+
 
 def main():
     parser = get_arg_parser()
@@ -40,7 +43,7 @@ def main():
     generate_module(
         module_path=args.module_path,
         service_name=args.service_name,
-        provider_version=args.provider_version,
+        min_provider_version=args.provider_version,
     )
 
 

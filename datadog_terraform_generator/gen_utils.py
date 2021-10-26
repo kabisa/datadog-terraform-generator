@@ -109,6 +109,7 @@ def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
                         + indent * indent_str
                         + "}\n"
                     )
+                s = s.rstrip()
             else:
                 s += key + " = [\n"
                 for i in val:
@@ -146,27 +147,14 @@ def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
+    """
+    Creates basic argparser that allows to use --config_name
+    """
     parser = argparse.ArgumentParser()
     config = load_config()
     parser.add_argument(
-        "--current_config",
+        "--config_name",
         help="selects config from ~/.datadog_terraform_generator/config.yaml",
         default=config["current_config"],
-    )
-    current_config = config["configs"][config["current_config"]]
-    parser.add_argument(
-        "--api_host",
-        help=f"host url of datadog defaults to {current_config['datadog_url']}",
-        default=os.environ.get("API_HOST", current_config["datadog_url"]),
-    )
-    parser.add_argument(
-        "--api_key",
-        help="datadog api key defaults to env var API_KEY",
-        default=os.environ.get("API_KEY", current_config["api_key"]),
-    )
-    parser.add_argument(
-        "--app_key",
-        help="datadog application key defaults to env var APP_KEY",
-        default=os.environ.get("APP_KEY", current_config["app_key"]),
     )
     return parser

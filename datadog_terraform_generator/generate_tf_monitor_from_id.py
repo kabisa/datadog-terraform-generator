@@ -1,6 +1,8 @@
 import re
 
-from datadog_terraform_generator.gen_utils import get_arg_parser, DdApi, find_between
+from datadog_terraform_generator.config_management import get_config_by_name
+from datadog_terraform_generator.gen_utils import get_arg_parser, find_between
+from datadog_terraform_generator.api import DdApi
 from datadog_terraform_generator.generate_tf_monitor import (
     load_search_replace_defaults,
     generate,
@@ -87,8 +89,9 @@ def main():
     parser = get_arg_parser()
     parser.add_argument("monitor_id")
     args = parser.parse_args()
+    config = get_config_by_name(args.config_name)
     pull_generic_check(
-        dd_api=DdApi.from_args(args),
+        dd_api=DdApi.from_config(config),
         monitor_id=args.monitor_id,
     )
 

@@ -21,5 +21,9 @@ class DdApi:
         return req.json()
 
     @classmethod
-    def from_args(cls, args):
-        return cls(api_host=args.api_host, api_key=args.api_key, app_key=args.app_key)
+    def from_config(cls, config):
+        return cls(
+            api_host=config["datadog_url"],
+            api_key=config["api_key"],
+            app_key=config["app_key"],
+        )

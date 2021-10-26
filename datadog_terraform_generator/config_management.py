@@ -68,3 +68,12 @@ def switch_context():
             file=sys.stderr,
         )
         sys.exit()
+
+
+def get_config_by_name(selected_config_name=None):
+    """
+    Gets config by name from the config file
+    """
+    config = load_config()
+    selected_config_name = selected_config_name or config["current_config"]
+    return config["configs"][selected_config_name]

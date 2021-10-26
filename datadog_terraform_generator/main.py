@@ -12,6 +12,7 @@ from datadog_terraform_generator.gen_utils import get_arg_parser
 import datadog_terraform_generator.generate_tf_monitor as generate_tf_monitor
 import datadog_terraform_generator.generate_tf_monitor_from_id as generate_tf_monitor_from_id
 import datadog_terraform_generator.generate_defaults_file as generate_defaults_file
+import datadog_terraform_generator.generate_tf_module as generate_tf_module
 
 
 def script_found(options_dict):
@@ -28,6 +29,7 @@ def check_help_options(options_dict):
     """
     dont_print_help = script_found(options_dict)
     help_option = None
+    new_sys_argv = None
     if dont_print_help:
         new_sys_argv = []
         for arg in sys.argv:
@@ -51,19 +53,23 @@ def main():
                 "monitor_from_template": generate_tf_monitor.main,
                 "monitor_from_id": generate_tf_monitor_from_id.main,
                 "log_metrics": log_metrics_to_tf.main,
-                "defaults": generate_defaults_file.main,
+                "module": generate_tf_module.main,
+                "defaults_file": generate_defaults_file.main,
                 "switch_context": switch_context,
             }
         )
     else:
         parser = argparse.ArgumentParser()
 
-    options = ", ".join(sorted(options_dict))
-    parser.add_argument("option", help=f"parser option [{options}]", nargs="+")
+    parser.add_argument(
+        "subcommand",
+        help=f"subcommand, each subcommand has its own parameters, options {','.join(sorted(options_dict))}",
+        nargs="+",
+    )
     help_option, new_sys_argv = check_help_options(options_dict)
     args = parser.parse_args()
 
-    main_to_call = options_dict[args.option[0]]
+    main_to_call = options_dict[args.subcommand[0]]
     if help_option:
         new_sys_argv.append(help_option)
 
