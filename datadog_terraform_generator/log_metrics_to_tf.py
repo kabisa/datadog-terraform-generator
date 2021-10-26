@@ -5,7 +5,7 @@ from datadog_terraform_generator.api import DdApi
 
 TF_TEMPLATE = """
 resource "datadog_logs_metric" "{metric_underscored}" {{
-  {content}
+{content}
 }}
 """
 

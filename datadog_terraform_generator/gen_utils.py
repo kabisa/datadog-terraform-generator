@@ -93,9 +93,12 @@ def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
             is_block_list = key.startswith("_")
             if is_block_list:
                 key = key[1:]
-                for i in val:
+                for idx, i in enumerate(val):
+                    # first key is already indented by beginning of this loop
+                    indent_key = idx != 0
                     s += (
-                        key
+                        indent * indent_str * indent_key
+                        + key
                         + " {\n"
                         + str(
                             print_hcl(
