@@ -6,7 +6,6 @@ import yaml
 from typing import Any, Dict
 
 from datadog_terraform_generator.gen_utils import (
-    get_arg_parser,
     get_local_abs_path,
     get_package_file_contents,
     fill_template,
@@ -27,10 +26,12 @@ def generate(output_dir, **vals: Dict[str, Any]):
     with open(monitor_path, "w") as monitor_fl:
         monitor_str = fill_template(mon_template, vals)
         monitor_fl.write(monitor_str)
+        print(f"Written {monitor_path}")
 
     with open(variables_path, "w") as mon_vars_fl:
         mon_vars_str = fill_template(mon_vars_template, vals)
         mon_vars_fl.write(mon_vars_str)
+        print(f"Written {variables_path}")
 
 
 def load_search_replace_defaults():
@@ -42,16 +43,20 @@ def load_search_replace_defaults():
         return yaml.safe_load(fl)
 
 
-def main():
+def main(args):
     defaults = load_search_replace_defaults()
-    parser = get_arg_parser()
+    vals = {ky: getattr(args, ky, default) for ky, default in defaults.items()}
+    generate(args.output_dir, **vals)
+
+
+def add_sub_parser(subparsers):
+    parser = subparsers.add_parser("monitor_from_template")
+    parser.add_argument(
+        "output_dir",
+        help="directory to generated the files into",
+        default=".",
+    )
+    defaults = load_search_replace_defaults()
     for ky, vl in defaults.items():
         parser.add_argument(f"--{ky}", default=vl)
-
-    args = parser.parse_args()
-    vals = {ky: getattr(args, ky, default) for ky, default in defaults.items()}
-    generate(**vals)
-
-
-if __name__ == "__main__":
-    main()
+    parser.set_defaults(func=main)

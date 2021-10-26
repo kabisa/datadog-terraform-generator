@@ -12,6 +12,18 @@ ddtfgen
 
 ```
 
+## Autocompletions
+
+```bash
+activate-global-python-argcomplete
+```
+
+add this to your `.bashrc` or `.zshrc` 
+
+```bash
+eval "$(register-python-argcomplete ddtfgen)"
+```
+
 ## Developing
 
 Pre-commit:

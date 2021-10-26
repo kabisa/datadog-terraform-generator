@@ -46,6 +46,10 @@ def fill_template(template: str, vals: Dict[str, Any]) -> str:
     return output
 
 
+def str_fmtr(val) -> str:
+    return '"' + str(val.replace('"', '\\"')) + '"'
+
+
 def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
     """
     Produces a multi-line string for use in terraform tfvars file from a dictionary
@@ -88,7 +92,7 @@ def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
                     k = key
             else:
                 k = key
-            s += "{0} = {1}\n".format(k, '"' + str(val.replace('"', '\\"')) + '"')
+            s += "{0} = {1}\n".format(k, str_fmtr(val))
         elif isinstance(val, list):
             is_block_list = key.startswith("_")
             if is_block_list:
@@ -136,10 +140,10 @@ def print_hcl(input_dict, indent=0, quote_keys=False, indent_str="  "):
                 s = s[0:-2]
                 s += "\n]\n"
         elif val is None:
-            if indent:
-                s += '"{0}" = {1}\n'.format(key, '""')
+            if quote_keys:
+                s += '"{0}" = {1}\n'.format(key, "null")
             else:
-                s += "{0} = {1}\n".format(key, '""')
+                s += "{0} = {1}\n".format(key, "null")
         else:
             if quote_keys:
                 k = '"{}"'.format(key)

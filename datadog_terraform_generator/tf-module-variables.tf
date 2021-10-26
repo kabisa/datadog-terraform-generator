@@ -3,36 +3,44 @@ variable "filter_str" {
 }
 
 variable "env" {
-  type = string
+  description = "This refers to the environment or which stage of deployment this monitor is checking. Good values are prd, acc, tst, dev..."
+  type        = string
 }
 
 variable "service" {
-  type    = string
-  default = "SERVICE_NAME"
+  description = "Service name of what you're monitoring. This also sets the service:<service> tag on the monitor"
+  type        = string
+  default     = SERVICE_NAME
 }
 
 variable "notification_channel" {
-  type = string
+  description = "Channel to which datadog sends alerts, will be overridden by alerting_enabled if that's set to false"
+  type        = string
+  default     = ""
 }
 
 variable "additional_tags" {
-  type    = list(string)
-  default = []
+  description = "Additional tags to set on the monitor. Good tagging can be hard but very useful to make cross sections of the environment. Datadog has a few default tags. https://docs.datadoghq.com/getting_started/tagging/ is a good place to start reading about tags"
+  type        = list(string)
+  default     = []
 }
 
 variable "locked" {
-  type    = bool
-  default = true
+  description = "Makes sure only the creator or admin can modify the monitor"
+  type        = bool
+  default     = true
 }
 
 variable "name_prefix" {
-  type    = string
-  default = ""
+  description = "Can be used to prefix to the Monitor name"
+  type        = string
+  default     = ""
 }
 
 variable "name_suffix" {
-  type    = string
-  default = ""
+  description = "Can be used to suffix to the Monitor name"
+  type        = string
+  default     = ""
 }
 
 variable "service_check_include_tags" {

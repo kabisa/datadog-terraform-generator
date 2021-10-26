@@ -1,18 +1,15 @@
 import argparse
+import argcomplete
 import sys
 from os.path import exists
 
 from datadog_terraform_generator import log_metrics_to_tf
-from datadog_terraform_generator.config_management import (
-    CONFIG_FILE,
-    init_config,
-    switch_context,
-)
 from datadog_terraform_generator.gen_utils import get_arg_parser
 import datadog_terraform_generator.generate_tf_monitor as generate_tf_monitor
 import datadog_terraform_generator.generate_tf_monitor_from_id as generate_tf_monitor_from_id
 import datadog_terraform_generator.generate_defaults_file as generate_defaults_file
 import datadog_terraform_generator.generate_tf_module as generate_tf_module
+import datadog_terraform_generator.config_management as config_management
 
 
 def script_found(options_dict):
@@ -42,37 +39,26 @@ def check_help_options(options_dict):
 
 
 def main():
-    options_dict = {
-        "init": init_config,
-    }
-
-    if exists(CONFIG_FILE):
-        parser = get_arg_parser()
-        options_dict.update(
-            {
-                "monitor_from_template": generate_tf_monitor.main,
-                "monitor_from_id": generate_tf_monitor_from_id.main,
-                "log_metrics": log_metrics_to_tf.main,
-                "module": generate_tf_module.main,
-                "defaults_file": generate_defaults_file.main,
-                "switch_context": switch_context,
-            }
-        )
-    else:
-        parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "subcommand",
-        help=f"subcommand, each subcommand has its own parameters, options {','.join(sorted(options_dict))}",
-        nargs="+",
+    config_exists = exists(config_management.CONFIG_FILE)
+    parser = get_arg_parser() if config_exists else argparse.ArgumentParser()
+    sub_parser = parser.add_subparsers(
+        help="subcommand, each subcommand has its own parameters",
     )
-    help_option, new_sys_argv = check_help_options(options_dict)
+
+    config_management.add_sub_parser(sub_parser, config_exists)
+    if config_exists:
+        generate_defaults_file.add_sub_parser(sub_parser)
+        generate_tf_monitor.add_sub_parser(sub_parser)
+        generate_tf_monitor_from_id.add_sub_parser(sub_parser)
+        log_metrics_to_tf.add_sub_parser(sub_parser)
+        generate_tf_module.add_sub_parser(sub_parser)
+
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
-
-    main_to_call = options_dict[args.subcommand[0]]
-    if help_option:
-        new_sys_argv.append(help_option)
-
-    sys.argv = new_sys_argv[1:]
-    main_to_call()
+    args.func(args)
     print("Done")
+
+
+if __name__ == "__main__":
+    sys.argv = ["ddtfgen", "defaults_file", "~/tmp"]
+    main()

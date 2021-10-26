@@ -1,26 +1,30 @@
 from os.path import join
 
 from datadog_terraform_generator.gen_utils import (
-    get_arg_parser,
     get_package_file_contents,
     fill_template,
+    str_fmtr,
 )
 
 
 def write_module_file(module_path, file_name, contents, replacements):
     replaced_contents = fill_template(contents, replacements)
-    with open(join(module_path, file_name), "w") as fl:
+    file_path = join(module_path, file_name)
+    with open(file_path, "w") as fl:
         fl.write(replaced_contents)
+        print(f"Written {file_path}")
 
 
 def generate_module(module_path, service_name, min_provider_version):
     replacements = {
         "MIN_PROVIDER_VERSION": min_provider_version,
-        "SERVICE_NAME": service_name,
+        "SERVICE_NAME": str_fmtr(service_name)
+        if isinstance(service_name, str)
+        else "null",
     }
     files = [
-        ("tf-module-provider", "provider.tf"),
-        ("tf-module-variables", "variables.tf"),
+        ("tf-module-provider.tf", "provider.tf"),
+        ("tf-module-variables.tf", "variables.tf"),
     ]
     for packaged_file, output_file in files:
         tf = get_package_file_contents(packaged_file)
@@ -30,16 +34,7 @@ def generate_module(module_path, service_name, min_provider_version):
     write_module_file(module_path, "main.tf", "\n", {})
 
 
-def main():
-    parser = get_arg_parser()
-    parser.add_argument(
-        "module_path", help="The full path of the module eg ./modules/mymodule"
-    )
-    parser.add_argument("--service_name", help="Name of the service", default=None)
-    parser.add_argument(
-        "--provider_version", help="Minimal version of datadog provider", default="2.21"
-    )
-    args = parser.parse_args()
+def main(args):
     generate_module(
         module_path=args.module_path,
         service_name=args.service_name,
@@ -47,5 +42,13 @@ def main():
     )
 
 
-if __name__ == "__main__":
-    main()
+def add_sub_parser(subparsers):
+    parser = subparsers.add_parser("module")
+    parser.add_argument(
+        "module_path", help="The full path of the module eg ./modules/mymodule"
+    )
+    parser.add_argument("--service_name", help="Name of the service", default=None)
+    parser.add_argument(
+        "--provider_version", help="Minimal version of datadog provider", default="2.21"
+    )
+    parser.set_defaults(func=main)

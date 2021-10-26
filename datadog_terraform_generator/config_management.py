@@ -1,4 +1,3 @@
-import argparse
 import os
 import sys
 from os.path import expanduser, join, exists
@@ -11,7 +10,7 @@ CONFIG_DIR = join(HOME, ".datadog_terraform_generator")
 CONFIG_FILE = join(CONFIG_DIR, "config.yaml")
 
 
-def init_config() -> Dict:
+def init_config(*args) -> Dict:
     if not exists(CONFIG_DIR):
         os.mkdir(CONFIG_DIR)
 
@@ -56,10 +55,7 @@ def store_config(config: Dict):
         yaml.safe_dump(config, fl, indent=2, sort_keys=True)
 
 
-def switch_context():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config_name", help="name of the context you want to switch to")
-    args = parser.parse_args()
+def switch_config(args):
     config = load_config()
     available_config_names = list(config["configs"])
     if args.config_name not in available_config_names:
@@ -77,3 +73,15 @@ def get_config_by_name(selected_config_name=None):
     config = load_config()
     selected_config_name = selected_config_name or config["current_config"]
     return config["configs"][selected_config_name]
+
+
+def add_sub_parser(subparsers, config_exists):
+    if config_exists:
+        switch_parser = subparsers.add_parser("switch_config")
+        switch_parser.add_argument(
+            "config_name", help="name of the context you want to switch to"
+        )
+        switch_parser.set_defaults(func=switch_config)
+
+    init_parser = subparsers.add_parser("init")
+    init_parser.set_defaults(func=init_config)

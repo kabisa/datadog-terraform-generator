@@ -1,7 +1,7 @@
 import re
 
 from datadog_terraform_generator.config_management import get_config_by_name
-from datadog_terraform_generator.gen_utils import get_arg_parser, find_between
+from datadog_terraform_generator.gen_utils import find_between
 from datadog_terraform_generator.api import DdApi
 from datadog_terraform_generator.generate_tf_monitor import (
     load_search_replace_defaults,
@@ -16,7 +16,7 @@ def get_after_comp_loc(query):
     raise Exception(f"No comparator found in query: {query}")
 
 
-def pull_generic_check(dd_api: DdApi, monitor_id):
+def pull_generic_check(dd_api: DdApi, monitor_id, output_dir):
     data = dd_api.request(path=f"api/v1/monitor/{monitor_id}")
     query_parts = data["query"].split(":")
     m = re.search(
@@ -66,7 +66,6 @@ def pull_generic_check(dd_api: DdApi, monitor_id):
         f"{time_agg_fun}({evaluation_period})",
         f"{time_agg_fun}(${{var.MODULE_NAME_evaluation_period}})",
     ).replace(filter_str, "${local.MODULE_NAME_filter}")
-    print(data)
     vals = load_search_replace_defaults()
     vals.update(
         {
@@ -81,19 +80,27 @@ def pull_generic_check(dd_api: DdApi, monitor_id):
             "priority": str(priority),
         }
     )
-    print(vals)
-    generate(**vals)
+    generate(output_dir, **vals)
 
 
-def main():
-    parser = get_arg_parser()
-    parser.add_argument("monitor_id")
-    args = parser.parse_args()
+def main(args):
     config = get_config_by_name(args.config_name)
     pull_generic_check(
         dd_api=DdApi.from_config(config),
         monitor_id=args.monitor_id,
+        output_dir=args.output_dir,
     )
+
+
+def add_sub_parser(subparsers):
+    parser = subparsers.add_parser("monitor_from_id")
+    parser.add_argument("monitor_id")
+    parser.add_argument(
+        "output_dir",
+        help="directory to generated the files into",
+        default=".",
+    )
+    parser.set_defaults(func=main)
 
 
 if __name__ == "__main__":
