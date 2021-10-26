@@ -1,3 +1,5 @@
+from fnmatch import fnmatch
+
 from datadog_terraform_generator.config_management import get_config_by_name
 from datadog_terraform_generator.gen_utils import print_hcl
 from datadog_terraform_generator.api import DdApi
@@ -34,7 +36,7 @@ def pull_logs_metrics(dd_api: DdApi, output_file, metric_name, output_mode="a"):
     data = dd_api.request(path="api/v2/logs/config/metrics")
     lookup = {}
     for metric in data["data"]:
-        if metric_name == "all" or metric["id"] == metric_name:
+        if metric_name == "all" or fnmatch(metric["id"], metric_name):
             lookup[metric["id"]] = metric
 
     metrics_listed = "\n - ".join(sorted(lookup))
@@ -54,15 +56,21 @@ def main(args):
         dd_api=DdApi.from_config(config),
         output_file=args.output_file,
         output_mode=args.output_mode,
-        metric_name=args.metric_name,
+        metric_name=args.metric_name_pattern,
     )
 
 
 def add_sub_parser(subparsers):
     parser = subparsers.add_parser("log_metrics")
     parser.add_argument(
-        "metric_name",
-        help="Give the metric name you want to pull, [all] is also an option",
+        "metric_name_pattern",
+        help="""Give the pattern with whitch the metric needs to match
+             Patterns are Unix shell style:
+             *       matches everything
+             ?       matches any single character
+             [seq]   matches any character in seq
+             [!seq]  matches any char not in seq
+             """,
     )
     parser.add_argument("output_file", help="Filename to output the terraform code to")
     parser.add_argument(
