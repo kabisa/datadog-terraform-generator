@@ -1,4 +1,5 @@
 from fnmatch import fnmatch
+import subprocess
 
 from datadog_terraform_generator.config_management import get_config_by_name
 from datadog_terraform_generator.gen_utils import print_hcl
@@ -32,7 +33,9 @@ def generate_tf_code(metric_name, filter, compute, **optionals):
     )
 
 
-def pull_logs_metrics(dd_api: DdApi, output_file, metric_name, output_mode="a"):
+def pull_logs_metrics(
+    dd_api: DdApi, output_file, metric_name, output_mode="a", import_prefix=None
+):
     data = dd_api.request(path="api/v2/logs/config/metrics")
     lookup = {}
     for metric in data["data"]:
@@ -49,6 +52,31 @@ def pull_logs_metrics(dd_api: DdApi, output_file, metric_name, output_mode="a"):
             fl.write(tf_code)
         print(f"Written {output_file}")
 
+    if import_prefix:
+        if not import_prefix.endswith("."):
+            import_prefix += "."
+        if not import_prefix.endswith("datadog_logs_metric."):
+            import_prefix += "datadog_logs_metric."
+
+        output = subprocess.check_output(["terraform", "state", "list"]).decode("utf-8")
+        print(output)
+        state_list = output.splitlines(keepends=False)
+
+        for ky in sorted(lookup):
+            metric = lookup[ky]
+            metric_name = metric["id"]
+            metric_name_underscored = metric_name.replace(".", "_")
+            import_path = f"{import_prefix}{metric_name_underscored}"
+            if import_path in state_list:
+                print(f"skipping import {import_path}")
+                continue
+            command = f"terraform import {import_path} {metric_name}"
+            print(command)
+            output = subprocess.check_output(
+                ["terraform", "import", import_path, metric_name]
+            )
+            print(output.decode("utf-8"))
+
 
 def main(args):
     config = get_config_by_name(args.config_name)
@@ -57,6 +85,7 @@ def main(args):
         output_file=args.output_file,
         output_mode=args.output_mode,
         metric_name=args.metric_name_pattern,
+        import_prefix=args.import_prefix,
     )
 
 
@@ -77,5 +106,10 @@ def add_sub_parser(subparsers):
         "--output_mode",
         help="w for [w]rite to file, a for [a]ppend to file",
         default="w",
+    )
+    parser.add_argument(
+        "--import_prefix",
+        help="this will trigger terraform imports to be executed as well",
+        default=None,
     )
     parser.set_defaults(func=main)
