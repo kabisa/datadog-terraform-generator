@@ -17,21 +17,44 @@ def get_after_comp_loc(query):
 
 
 def pull_generic_check(dd_api: DdApi, monitor_id, output_dir):
-    data = dd_api.request(path=f"api/v1/monitor/{monitor_id}")
+    data = get_monitor_by_id(dd_api, monitor_id)
+    return generate_generic_monitor(output_dir, data)
+
+
+def get_monitor_by_id(dd_api, monitor_id):
+    return dd_api.request(path=f"api/v1/monitor/{monitor_id}")
+
+
+def monitor_supported(data):
+    monitor_type = data["type"]
+    if monitor_type in ("metric alert", "query alert"):
+        return True
+    return False
+
+
+def generate_generic_monitor(output_dir, data):
+    name = data["name"]
+    if not monitor_supported(data):
+        print(f"unsupported monitor type '{data['type']}' in monitor '{name}'")
+        return
+
     query_parts = data["query"].split(":")
     m = re.search(
         r"(?P<time_agg_fun>\w+)\((?P<evaluation_period>\w+)\)", query_parts[0]
     )
+    if not m:
+        print(f"Unexpected query {data['query']}")
     time_agg_fun = m.group("time_agg_fun")
     evaluation_period = m.group("evaluation_period")
     query_rest = ":".join(query_parts[2:])
+    if "options" not in data:
+        print(data)
     options = data["options"]
-    name = data["name"]
     name_parts = name.split("-")
     # Not yet used
     # tags = data["tags"]
     # group_agg_fun = query_parts[1]
-    # service_name_cased = name_parts[0].strip()
+    service_name_cased = name_parts[0].strip()
     # locked = options["locked"]
     # require_full_window = options["require_full_window"]
     # new_host_delay = options["new_host_delay"]
@@ -44,7 +67,9 @@ def pull_generic_check(dd_api: DdApi, monitor_id, output_dir):
     m = re.search(r"{([^}]+)}", query_rest)
     filter_str = m.group(1)
     critical = options["thresholds"]["critical"]
-    warning = options["thresholds"]["warning"]
+    warning = (
+        options["thresholds"]["warning"] if "warning" in options["thresholds"] else None
+    )
     alert_message = (
         "MONITOR_NAME ({{ value }}) in {{ service }} exceeds {{ threshold }}"
     )
@@ -78,9 +103,11 @@ def pull_generic_check(dd_api: DdApi, monitor_id, output_dir):
             "critical": str(critical),
             "warning": str(warning),
             "priority": str(priority),
+            "service_name": service_name_cased,
         }
     )
     generate(output_dir, **vals)
+    return vals
 
 
 def main(args):
@@ -101,7 +128,3 @@ def add_sub_parser(subparsers):
         default=".",
     )
     parser.set_defaults(func=main)
-
-
-if __name__ == "__main__":
-    main()

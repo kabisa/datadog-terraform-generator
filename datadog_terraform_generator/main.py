@@ -60,5 +60,11 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv = ["ddtfgen", "defaults_file", "~/tmp"]
+    sys.argv = [
+        "ddtfgen",
+        "module",
+        "--from_query",
+        "service:vault",
+        "/Users/sjuuljanssen/workspace/toyota-dd/vault",
+    ]
     main()
