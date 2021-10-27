@@ -1,7 +1,7 @@
 import argparse
 import os
-from typing import Dict, Any
-
+import subprocess
+from typing import Dict, Any, List
 
 from datadog_terraform_generator.config_management import load_config
 
@@ -165,3 +165,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
         default=config["current_config"],
     )
     return parser
+
+
+def cli_call(command: List[str], enable_printing=True) -> str:
+    if enable_printing:
+        print(" ".join(command))
+    output = subprocess.check_output(command)
+    output = output.decode("utf-8")
+    if enable_printing:
+        print(output)
+    return output

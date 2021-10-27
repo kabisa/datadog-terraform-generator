@@ -10,6 +10,7 @@ import datadog_terraform_generator.generate_tf_monitor_from_id as generate_tf_mo
 import datadog_terraform_generator.generate_defaults_file as generate_defaults_file
 import datadog_terraform_generator.generate_tf_module as generate_tf_module
 import datadog_terraform_generator.config_management as config_management
+import datadog_terraform_generator.mass_state_move as mass_state_move
 
 
 def script_found(options_dict):
@@ -52,6 +53,7 @@ def main():
         generate_tf_monitor_from_id.add_sub_parser(sub_parser)
         log_metrics_to_tf.add_sub_parser(sub_parser)
         generate_tf_module.add_sub_parser(sub_parser)
+        mass_state_move.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -62,9 +64,8 @@ def main():
 if __name__ == "__main__":
     sys.argv = [
         "ddtfgen",
-        "module",
-        "--from_query",
-        "service:vault",
-        "/Users/sjuuljanssen/workspace/toyota-dd/vault",
+        "mass_state_move",
+        "module.eureka_apm",
+        "module.apm_services",
     ]
     main()

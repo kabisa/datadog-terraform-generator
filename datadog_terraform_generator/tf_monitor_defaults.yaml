@@ -1,4 +1,3 @@
-module_name: "hadoop_dead_data_nodes"
 monitor_name: "Dead Data Nodes"
 metric_name: "digazu.hadoop_namenode_num_dead_data_nodes"
 query: "TIME_AGGREGATION(${var.MODULE_NAME_evaluation_period}):GROUP_BY_AGGREGATION:METRIC_NAME{${local.MODULE_NAME_filter}} > ${var.MODULE_NAME_critical}"

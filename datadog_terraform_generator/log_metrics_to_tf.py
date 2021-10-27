@@ -1,10 +1,9 @@
 from fnmatch import fnmatch
-import subprocess
 
 from datadog_terraform_generator.config_management import get_config_by_name
-from datadog_terraform_generator.gen_utils import print_hcl
+from datadog_terraform_generator.gen_utils import print_hcl, cli_call
 from datadog_terraform_generator.api import DdApi
-
+from datadog_terraform_generator.terraform_calls import get_state_list
 
 TF_TEMPLATE = """
 resource "datadog_logs_metric" "{metric_underscored}" {{
@@ -58,10 +57,7 @@ def pull_logs_metrics(
         if not import_prefix.endswith("datadog_logs_metric."):
             import_prefix += "datadog_logs_metric."
 
-        output = subprocess.check_output(["terraform", "state", "list"]).decode("utf-8")
-        print(output)
-        state_list = output.splitlines(keepends=False)
-
+        state_list = get_state_list()
         for ky in sorted(lookup):
             metric = lookup[ky]
             metric_name = metric["id"]
@@ -70,12 +66,7 @@ def pull_logs_metrics(
             if import_path in state_list:
                 print(f"skipping import {import_path}")
                 continue
-            command = f"terraform import {import_path} {metric_name}"
-            print(command)
-            output = subprocess.check_output(
-                ["terraform", "import", import_path, metric_name]
-            )
-            print(output.decode("utf-8"))
+            cli_call(["terraform", "import", import_path, metric_name])
 
 
 def main(args):
