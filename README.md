@@ -40,6 +40,11 @@ Do you also like running 20 terraform state mv commands by hand?
 ddtfgen module.a.b. module.c.d.
 ```
 
+Get Host list:
+```bash
+ddtfgen --config_name X get_host_list --host_name_pattern "*.local" --tags_pattern "service:abs"
+```
+
 Generate the TF code for log metrics
 
 ## Autocompletions

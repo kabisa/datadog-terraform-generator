@@ -11,6 +11,7 @@ import datadog_terraform_generator.generate_defaults_file as generate_defaults_f
 import datadog_terraform_generator.generate_tf_module as generate_tf_module
 import datadog_terraform_generator.config_management as config_management
 import datadog_terraform_generator.mass_state_move as mass_state_move
+import datadog_terraform_generator.get_host_list as get_host_list
 
 
 def script_found(options_dict):
@@ -54,6 +55,7 @@ def main():
         log_metrics_to_tf.add_sub_parser(sub_parser)
         generate_tf_module.add_sub_parser(sub_parser)
         mass_state_move.add_sub_parser(sub_parser)
+        get_host_list.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -64,8 +66,13 @@ def main():
 if __name__ == "__main__":
     sys.argv = [
         "ddtfgen",
-        "mass_state_move",
-        "module.eureka_apm",
-        "module.apm_services",
+        "--config_name",
+        "tceu",
+        "get_host_list",
+        "--host_name_pattern",
+        "lxb2c*",
+        "--tags_pattern",
+        "service:telematics",
     ]
+    print(" ".join(sys.argv))
     main()
