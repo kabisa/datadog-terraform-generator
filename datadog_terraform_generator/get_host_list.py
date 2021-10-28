@@ -30,7 +30,7 @@ def tags_match(tags, tags_pattern):
         pattern_key, pattern_value = matchable_pattern.split(":")
         for tag in tags:
             if ":" in tag:
-                tag_key, tag_value = tag.split(":")
+                tag_key, tag_value = tag.split(":", maxsplit=1)
                 if tag_key == pattern_key and fnmatch(tag_value, pattern_value):
                     return True
     return False
@@ -48,14 +48,23 @@ def filter_hosts(host_name_pattern, hosts, tags_pattern):
         yield host
 
 
+def get_ip_from_gohai(gohai):
+    if gohai.get("network"):
+        return gohai["network"].get("ipaddress", "")
+
+
 def print_hosts(hosts):
+    cnt = 0
     for host in sorted(hosts, key=lambda h: (get_env_from_host(h), h["name"])):
+        cnt += 1
         tags = get_tags_from_host(host)
         if "gohai" in host["meta"]:
             gohai = json.loads(host["meta"]["gohai"])
-            print(host["name"], tags, gohai["network"]["ipaddress"])
+            ip_address = get_ip_from_gohai(gohai)
+            print(host["name"], tags, ip_address)
         else:
             print(host["name"], tags)
+    print(f"Found {cnt} hosts")
 
 
 def get_env_from_host(host):
@@ -70,11 +79,11 @@ def get_env(tags):
 
 
 def get_tags_from_host(host):
+    all_tags = []
     tbs = host["tags_by_source"]
-    if not tbs:
-        return ""
-    alt = tbs[list(tbs)[0]]
-    return tbs.get("Datadog", alt)
+    for ky, tags in tbs.items():
+        all_tags.extend(tags)
+    return list(sorted(set(all_tags)))
 
 
 def main(args):
