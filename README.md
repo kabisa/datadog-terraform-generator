@@ -42,7 +42,7 @@ ddtfgen module.a.b. module.c.d.
 
 Get Host list:
 ```bash
-ddtfgen --config_name X get_host_list --host_name_pattern "*.local" --tags_pattern "service:abs"
+ddtfgen --config_name X get_host_list --host_name_pattern "*.local" --tags_pattern "service:abc"
 ```
 
 Generate the TF code for log metrics
