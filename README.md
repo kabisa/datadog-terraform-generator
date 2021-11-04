@@ -45,6 +45,12 @@ Get Host list:
 ddtfgen --config_name X get_host_list --host_name_pattern "*.local" --tags_pattern "service:abc"
 ```
 
+Generate services file:
+This will output a yaml file that shows the dependencies between services
+```bash
+ddtfgen services_file prd
+```
+
 Generate the TF code for log metrics
 
 ## Autocompletions
