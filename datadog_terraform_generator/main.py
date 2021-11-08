@@ -44,9 +44,11 @@ if __name__ == "__main__":
         "ddtfgen",
         "--config_name",
         "tceu",
-        "get_host_list",
-        "--tags_pattern",
-        "service:telematics",
+        "monitor_from_id",
+        "3063169",
+        "./",
+        "--check_name_cased",
+        "Process CPU used",
     ]
     print(" ".join(sys.argv))
     main()

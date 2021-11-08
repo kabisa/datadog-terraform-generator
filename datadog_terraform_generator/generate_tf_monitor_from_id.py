@@ -16,23 +16,32 @@ def get_after_comp_loc(query):
     raise Exception(f"No comparator found in query: {query}")
 
 
-def pull_generic_check(dd_api: DdApi, monitor_id, output_dir):
+def pull_generic_check(
+    dd_api: DdApi, monitor_id, output_dir, check_name_cased, param_overrides
+):
     data = get_monitor_by_id(dd_api, monitor_id)
-    return generate_generic_monitor(output_dir, data)
+    return generate_generic_monitor(
+        output_dir,
+        data,
+        check_name_cased=check_name_cased,
+        param_overrides=param_overrides,
+    )
 
 
-def get_monitor_by_id(dd_api, monitor_id):
+def get_monitor_by_id(dd_api, monitor_id) -> dict:
     return dd_api.request(path=f"api/v1/monitor/{monitor_id}")
 
 
 def monitor_supported(data):
     monitor_type = data["type"]
-    if monitor_type in ("metric alert", "query alert"):
+    if monitor_type in ("metric alert", "query alert", "process alert"):
         return True
     return False
 
 
-def generate_generic_monitor(output_dir, data):
+def generate_generic_monitor(
+    output_dir, data, check_name_cased=None, param_overrides=None
+):
     name = data["name"]
     if not monitor_supported(data):
         print(f"unsupported monitor type '{data['type']}' in monitor '{name}'")
@@ -47,6 +56,8 @@ def generate_generic_monitor(output_dir, data):
     time_agg_fun = m.group("time_agg_fun")
     evaluation_period = m.group("evaluation_period")
     query_rest = ":".join(query_parts[2:])
+    m = re.search(r"{([^}]+)}", query_rest)
+    filter_str = m.group(1)
     if "options" not in data:
         print(data)
     options = data["options"]
@@ -59,13 +70,12 @@ def generate_generic_monitor(output_dir, data):
     # require_full_window = options["require_full_window"]
     # new_host_delay = options["new_host_delay"]
     message = data["message"]
-    if "[" in name_parts[-1]:
-        check_name_cased = name_parts[-2].strip()
-    else:
-        check_name_cased = name_parts[-1].strip()
+    if not check_name_cased:
+        if "[" in name_parts[-1]:
+            check_name_cased = name_parts[-2].strip()
+        else:
+            check_name_cased = name_parts[-1].strip()
     module_name = re.sub(r"[^\w]", "_", check_name_cased).lower()
-    m = re.search(r"{([^}]+)}", query_rest)
-    filter_str = m.group(1)
     critical = options["thresholds"]["critical"]
     warning = (
         options["thresholds"]["warning"] if "warning" in options["thresholds"] else None
@@ -106,16 +116,26 @@ def generate_generic_monitor(output_dir, data):
             "service_name": service_name_cased,
         }
     )
+    if param_overrides:
+        vals.update(param_overrides)
     generate(output_dir, **vals)
     return vals
 
 
 def main(args):
+    defaults = load_search_replace_defaults()
+    param_overrides = {
+        ky: getattr(args, ky, None)
+        for ky, default in defaults.items()
+        if getattr(args, ky, None) is not None
+    }
     config = get_config_by_name(args.config_name)
     pull_generic_check(
         dd_api=DdApi.from_config(config),
         monitor_id=args.monitor_id,
         output_dir=args.output_dir,
+        param_overrides=param_overrides,
+        check_name_cased=args.check_name_cased,
     )
 
 
@@ -127,4 +147,8 @@ def add_sub_parser(subparsers):
         help="directory to generated the files into",
         default=".",
     )
+    defaults = load_search_replace_defaults()
+    for ky, vl in defaults.items():
+        parser.add_argument(f"--{ky}")
+    parser.add_argument("--check_name_cased")
     parser.set_defaults(func=main)
