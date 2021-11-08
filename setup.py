@@ -6,7 +6,7 @@ setup(
     description="Datadog Terraform Generator",
     packages=["datadog_terraform_generator"],
     package_data={"datadog_terraform_generator": ["*.tf", "tf_monitor_defaults.yaml"]},
-    install_requires=["requests", "pyyaml", "argcomplete"],
+    install_requires=["requests", "pyyaml", "argcomplete", "arrow"],
     entry_points={
         "console_scripts": ["ddtfgen=datadog_terraform_generator.main:main"],
     },
