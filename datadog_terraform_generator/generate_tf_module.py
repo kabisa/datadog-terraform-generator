@@ -67,7 +67,7 @@ def main(args):
             print("Ok exiting")
             sys.exit()
 
-    service_name = None
+    service_name = args.service_name
     if args.from_query:
         config = get_config_by_name(args.config_name)
         dd_api = DdApi.from_config(config)
@@ -87,11 +87,12 @@ def main(args):
             if monitor_vals:
                 service_name = monitor_vals.get("service_name", service_name)
 
-    use_svc_name = input(
-        f"I've found the following service name: {service_name} do you want to use it? [Yn]"
-    )
-    if use_svc_name.upper() != "Y" and use_svc_name:
-        service_name = args.service_name
+    if args.service_name is None:
+        use_svc_name = input(
+            f"I've found the following service name: {service_name} do you want to use it? [Yn]"
+        )
+        if use_svc_name.upper() != "Y" and use_svc_name:
+            service_name = args.service_name
 
     generate_module(
         module_path=args.module_path,
