@@ -9,3 +9,7 @@ def get_state_list():
 
 def move_state(old: str, new: str):
     cli_call(["terraform", "state", "mv", old, new])
+
+
+def terraform_plan():
+    return cli_call(["terraform", "plan"])

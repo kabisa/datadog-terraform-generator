@@ -51,6 +51,11 @@ This will output a yaml file that shows the dependencies between services
 ddtfgen services_file prd
 ```
 
+Get a summary of changes that Terraform wishes to perform
+```bash
+ddtfgen get_terraform_changes
+```
+
 Generate the TF code for log metrics
 
 ## Autocompletions

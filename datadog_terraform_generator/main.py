@@ -14,6 +14,7 @@ import datadog_terraform_generator.mass_state_move as mass_state_move
 import datadog_terraform_generator.get_host_list as get_host_list
 import datadog_terraform_generator.generate_service_file as generate_service_file
 import datadog_terraform_generator.query as query
+import datadog_terraform_generator.get_terraform_changes as get_terraform_changes
 
 
 def main():
@@ -34,6 +35,7 @@ def main():
         get_host_list.add_sub_parser(sub_parser)
         generate_service_file.add_sub_parser(sub_parser)
         query.add_sub_parser(sub_parser)
+        get_terraform_changes.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -44,13 +46,7 @@ def main():
 if __name__ == "__main__":
     sys.argv = [
         "ddtfgen",
-        "--config_name",
-        "tceu",
-        "monitor_from_id",
-        "3063169",
-        "./",
-        "--check_name_cased",
-        "Process CPU used",
+        "get_terraform_changes",
     ]
     print(" ".join(sys.argv))
     main()
