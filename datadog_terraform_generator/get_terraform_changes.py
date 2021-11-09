@@ -8,22 +8,6 @@ INPLACE_SEQ = "\033[0m will be updated in-place\033[0m\033[0m"
 INPLACE_SEQ_LEN = len(INPLACE_SEQ)
 
 
-def get_suffix_matches(suffix, lines):
-    suffix_matches = []
-    for line in lines:
-        if line.endswith(suffix):
-            suffix_matches.append(line)
-    return suffix_matches
-
-
-def get_prefix_matches(prefix, lines):
-    suffix_matches = []
-    for line in lines:
-        if line.startswith(prefix):
-            suffix_matches.append(line)
-    return suffix_matches
-
-
 def get_terraform_changes():
     output = terraform_plan()
     lines = output.splitlines(keepends=False)
