@@ -57,6 +57,7 @@ def load_search_replace_defaults():
 
 def main(args):
     defaults = load_search_replace_defaults()
+    # get defaults from args
     vals = {ky: getattr(args, ky, default) for ky, default in defaults.items()}
     generate(args.output_dir, args.module_name, **vals)
 

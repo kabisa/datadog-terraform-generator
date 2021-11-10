@@ -78,6 +78,10 @@ def generat_generic_log_monitor(
         r"\.last\(\"(\w)+\"\)", '.last("${var.MODULE_NAME_evaluation_period}")', query
     )
     query = re.sub(r"env:(\w+)", "env:${var.env}", query)
+
+    # escape escape characters
+    query = query.replace("\\", "\\\\").replace('"', '\\"')
+
     vals = determine_vals(
         alert_message,
         check_name_cased,

@@ -37,7 +37,7 @@ ddtfgen module --from_query "service:vault" modules/mymodule
 Mass move terraform state.
 Do you also like running 20 terraform state mv commands by hand?
 ```bash
-ddtfgen module.a.b. module.c.d.
+ddtfgen mass_state_move module.a.b. module.c.d.
 ```
 
 Get Host list:
