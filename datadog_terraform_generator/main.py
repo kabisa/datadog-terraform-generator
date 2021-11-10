@@ -44,6 +44,15 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv = ["ddtfgen", "--config", "tceu", "monitor_from_id", "2315399", "/tmp/"]
+    sys.argv = [
+        "ddtfgen",
+        "--config",
+        "tceu",
+        "monitor_from_id",
+        "2315399",
+        "/tmp/",
+        "--monitor_name",
+        "Profile response processing error",
+    ]
     print(" ".join(sys.argv))
     main()

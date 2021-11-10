@@ -17,7 +17,7 @@ def get_after_comp_loc(query):
 
 
 def pull_generic_check(
-    dd_api: DdApi, monitor_id, output_dir, check_name_cased, param_overrides
+    dd_api: DdApi, monitor_id, output_dir, monitor_name, param_overrides
 ):
     data = get_monitor_by_id(dd_api, monitor_id)
     monitor_type = data["type"]
@@ -25,14 +25,14 @@ def pull_generic_check(
         return generate_generic_monitor(
             output_dir,
             data,
-            check_name_cased=check_name_cased,
+            monitor_name=monitor_name,
             param_overrides=param_overrides,
         )
     elif monitor_type in ("log alert",):
         return generat_generic_log_monitor(
             output_dir,
             data,
-            check_name_cased=check_name_cased,
+            monitor_name=monitor_name,
             param_overrides=param_overrides,
         )
     else:
@@ -51,7 +51,7 @@ def monitor_supported(data):
 
 
 def generat_generic_log_monitor(
-    output_dir, data, check_name_cased=None, param_overrides=None
+    output_dir, data, monitor_name=None, param_overrides=None
 ):
     name = data["name"]
     if not monitor_supported(data):
@@ -59,14 +59,14 @@ def generat_generic_log_monitor(
         return
     (
         alert_message,
-        check_name_cased,
+        monitor_name,
         critical,
         module_name,
         priority,
         recovery_message,
         service_name_cased,
         warning,
-    ) = shared_monitor_settings(check_name_cased, data, name)
+    ) = shared_monitor_settings(monitor_name, data, name)
     query = data["query"]
     m = re.search(r"((\>)|(\>=)|(\<)|(\<=))\s(\d+)$", query)
     # threshold = int(m.group(6))
@@ -84,7 +84,7 @@ def generat_generic_log_monitor(
 
     vals = determine_vals(
         alert_message,
-        check_name_cased,
+        monitor_name,
         critical,
         evaluation_period,
         module_name,
@@ -99,10 +99,10 @@ def generat_generic_log_monitor(
     return vals
 
 
-def generate_generic_monitor(
-    output_dir, data, check_name_cased=None, param_overrides=None
-):
+def generate_generic_monitor(output_dir, data, monitor_name=None, param_overrides=None):
     name = data["name"]
+    if monitor_name:
+        name = monitor_name
     if not monitor_supported(data):
         print(f"unsupported monitor type '{data['type']}' in monitor '{name}'")
         return
@@ -120,14 +120,14 @@ def generate_generic_monitor(
     filter_str = m.group(1)
     (
         alert_message,
-        check_name_cased,
+        monitor_name,
         critical,
         module_name,
         priority,
         recovery_message,
         service_name_cased,
         warning,
-    ) = shared_monitor_settings(check_name_cased, data, name)
+    ) = shared_monitor_settings(monitor_name, data, name)
 
     loc = get_after_comp_loc(data["query"])
     query = data["query"][: loc + 1] + "${var.MODULE_NAME_critical}"
@@ -138,7 +138,7 @@ def generate_generic_monitor(
     ).replace(filter_str, "${local.MODULE_NAME_filter}")
     vals = determine_vals(
         alert_message,
-        check_name_cased,
+        monitor_name,
         critical,
         evaluation_period,
         module_name,
@@ -155,7 +155,7 @@ def generate_generic_monitor(
 
 def determine_vals(
     alert_message,
-    check_name_cased,
+    monitor_name,
     critical,
     evaluation_period,
     module_name,
@@ -170,7 +170,7 @@ def determine_vals(
     vals.update(
         {
             "module_name": module_name,
-            "monitor_name": check_name_cased,
+            "monitor_name": monitor_name,
             "query": query,
             "alert_message": alert_message,
             "recovery_message": recovery_message,
@@ -186,7 +186,7 @@ def determine_vals(
     return vals
 
 
-def shared_monitor_settings(check_name_cased, data, name):
+def shared_monitor_settings(monitor_name, data, name):
     if "options" not in data:
         raise Exception("Options not found")
     options = data["options"]
@@ -199,12 +199,12 @@ def shared_monitor_settings(check_name_cased, data, name):
     # require_full_window = options["require_full_window"]
     # new_host_delay = options["new_host_delay"]
     message = data["message"]
-    if not check_name_cased:
+    if not monitor_name:
         if "[" in name_parts[-1]:
-            check_name_cased = name_parts[-2].strip()
+            monitor_name = name_parts[-2].strip()
         else:
-            check_name_cased = name_parts[-1].strip()
-    module_name = re.sub(r"[^\w]", "_", check_name_cased).lower()
+            monitor_name = name_parts[-1].strip()
+    module_name = re.sub(r"[^\w]", "_", monitor_name).lower()
     critical = options["thresholds"]["critical"]
     warning = (
         options["thresholds"]["warning"] if "warning" in options["thresholds"] else None
@@ -222,7 +222,7 @@ def shared_monitor_settings(check_name_cased, data, name):
     priority = data["priority"] or 3
     return (
         alert_message,
-        check_name_cased,
+        monitor_name,
         critical,
         module_name,
         priority,
@@ -245,7 +245,7 @@ def main(args):
         monitor_id=args.monitor_id,
         output_dir=args.output_dir,
         param_overrides=param_overrides,
-        check_name_cased=args.check_name_cased,
+        monitor_name=args.monitor_name,
     )
 
 
@@ -260,5 +260,4 @@ def add_sub_parser(subparsers):
     defaults = load_search_replace_defaults()
     for ky, vl in defaults.items():
         parser.add_argument(f"--{ky}")
-    parser.add_argument("--check_name_cased")
     parser.set_defaults(func=main)
