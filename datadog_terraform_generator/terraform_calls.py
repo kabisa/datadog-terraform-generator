@@ -11,5 +11,8 @@ def move_state(old: str, new: str):
     cli_call(["terraform", "state", "mv", old, new])
 
 
-def terraform_plan():
-    return cli_call(["terraform", "plan"])
+def terraform_plan(target=None):
+    args = ["terraform", "plan"]
+    if target:
+        args.extend(["--target", target])
+    return cli_call(args)

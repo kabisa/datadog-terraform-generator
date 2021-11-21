@@ -8,8 +8,8 @@ INPLACE_SEQ = "\033[0m will be updated in-place\033[0m\033[0m"
 INPLACE_SEQ_LEN = len(INPLACE_SEQ)
 
 
-def get_terraform_changes():
-    output = terraform_plan()
+def get_terraform_changes(target=None):
+    output = terraform_plan(target=target)
     lines = output.splitlines(keepends=False)
     actions_idx = lines.index("Terraform will perform the following actions:")
     lines = lines[actions_idx:]
@@ -37,9 +37,14 @@ def get_terraform_changes():
 
 
 def main(args):
-    get_terraform_changes()
+    get_terraform_changes(args.target)
 
 
 def add_sub_parser(subparsers):
     parser = subparsers.add_parser("get_terraform_changes")
+    parser.add_argument(
+        "--target",
+        help="terraform target",
+        default=None,
+    )
     parser.set_defaults(func=main)
