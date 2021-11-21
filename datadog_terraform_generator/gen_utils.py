@@ -3,7 +3,9 @@ import os
 import subprocess
 from typing import Dict, Any, List
 
-from datadog_terraform_generator.config_management import load_config
+from argcomplete.completers import ChoicesCompleter
+
+from datadog_terraform_generator.config_management import load_config, list_config_names
 
 
 def get_local_abs_path(file_name):
@@ -163,7 +165,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
         "--config_name",
         help="selects config from ~/.datadog_terraform_generator/config.yaml",
         default=config["current_config"],
-    )
+    ).completer = ChoicesCompleter(list_config_names())
     return parser
 
 

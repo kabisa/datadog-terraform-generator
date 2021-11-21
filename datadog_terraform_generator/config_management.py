@@ -56,8 +56,7 @@ def store_config(config: Dict):
 
 
 def switch_config(args):
-    config = load_config()
-    available_config_names = list(config["configs"])
+    available_config_names = list_config_names()
     if args.config_name not in available_config_names:
         print(
             f"config {args.config_name} does not exist. Available options {','.join(available_config_names)}",
@@ -73,6 +72,11 @@ def get_config_by_name(selected_config_name=None):
     config = load_config()
     selected_config_name = selected_config_name or config["current_config"]
     return config["configs"][selected_config_name]
+
+
+def list_config_names():
+    config = load_config()
+    return list(config["configs"])
 
 
 def add_sub_parser(subparsers, config_exists):

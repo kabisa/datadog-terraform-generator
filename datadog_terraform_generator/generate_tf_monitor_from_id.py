@@ -70,8 +70,9 @@ def generat_generic_log_monitor(
     query = data["query"]
     m = re.search(r"((\>)|(\>=)|(\<)|(\<=))\s(\d+)$", query)
     # threshold = int(m.group(6))
-    # operator = m.group(1)
-    # query_selection_part = query.rsplit(operator)[0].strip()
+    operator = m.group(1)
+    query_selection_part = query.rsplit(operator)[0].strip()
+    query = f"{query_selection_part} {operator} ${{var.MODULE_NAME_critical}}"
     m = re.search(r"\.last\(\"(\w)+\"\)", query)
     evaluation_period = m.group(1)
     query = re.sub(
