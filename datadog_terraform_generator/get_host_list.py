@@ -49,7 +49,7 @@ def filter_hosts(host_name_pattern, hosts, tags_pattern):
 
 
 def get_ip_from_gohai(gohai):
-    if gohai.get("network"):
+    if gohai and gohai.get("network"):
         return gohai["network"].get("ipaddress", "")
 
 
