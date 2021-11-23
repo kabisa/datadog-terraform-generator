@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 import os
-import re
 import sys
 from os.path import exists
 
@@ -9,41 +8,28 @@ from typing import Any, Dict
 
 from datadog_terraform_generator.gen_utils import (
     get_local_abs_path,
-    get_package_file_contents,
-    fill_template,
+    canonicalize_tf_name,
+    canonicalize_tf_file_name,
+    render_from_template,
 )
 
 
-def generate(output_dir, module_name, **vals: Dict[str, Any]):
-    if re.sub(r"[\W]", "_", module_name).lower() != module_name:
+def generate(output_dir: str, module_name: str, **vals: Dict[str, Any]):
+    if canonicalize_tf_name(module_name) != module_name:
         print(
             "Unexpected module name, allowed characters are a-z and _ (underscore) without file extension",
             file=sys.stderr,
         )
         sys.exit()
 
-    mon_template = get_package_file_contents("tf-monitor-template.tf")
-    mon_vars_template = get_package_file_contents("tf-monitor-variables-template.tf")
-
-    # inject module name in vals so we can refer to it if needed
+    # inject module name in vals so we can refer to it during rendering
     vals["module_name"] = module_name
 
-    file_name = vals["module_name"].replace("_", "-") + ".tf"
-    while "--" in file_name:
-        file_name = file_name.replace("--", "-")
-
+    file_name = canonicalize_tf_file_name(vals["module_name"])
     monitor_path = os.path.normpath(os.path.join(output_dir, file_name))
     variables_path = monitor_path.replace(".tf", "-variables.tf")
-
-    with open(monitor_path, "w") as monitor_fl:
-        monitor_str = fill_template(mon_template, vals)
-        monitor_fl.write(monitor_str)
-        print(f"Written {monitor_path}")
-
-    with open(variables_path, "w") as mon_vars_fl:
-        mon_vars_str = fill_template(mon_vars_template, vals)
-        mon_vars_fl.write(mon_vars_str)
-        print(f"Written {variables_path}")
+    render_from_template("tf-monitor-template.tf", vals, monitor_path)
+    render_from_template("tf-monitor-variables-template.tf", vals, variables_path)
 
 
 def load_search_replace_defaults():

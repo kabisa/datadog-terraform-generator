@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import subprocess
 from typing import Dict, Any, List
 
@@ -46,6 +47,16 @@ def fill_template(template: str, vals: Dict[str, Any]) -> str:
         if not changes_applied:
             break
     return output
+
+
+def render_from_template(
+    template_file_name: str, vals: Dict[str, Any], output_file_path: str
+):
+    mon_template = get_package_file_contents(template_file_name)
+    with open(output_file_path, "w") as output_fl:
+        contents = fill_template(mon_template, vals)
+        output_fl.write(contents)
+        print(f"Written {output_file_path}")
 
 
 def str_fmtr(val) -> str:
@@ -177,3 +188,24 @@ def cli_call(command: List[str], enable_printing=True) -> str:
     if enable_printing:
         print(output)
     return output
+
+
+def input_question(question: str, default_value: str) -> bool:
+    assert default_value in ("Y", "N")
+    other_val = "n" if default_value == "Y" else "y"
+    input_value = input(f"{question} [{default_value}{other_val}]")
+    input_value = input_value.strip().upper()
+    return input_value == default_value or input_value == ""
+
+
+def canonicalize_tf_name(name: str) -> str:
+    return re.sub(r"[\W]", "_", name).lower()
+
+
+def canonicalize_tf_file_name(name: str) -> str:
+    if name.endswith(".tf"):
+        name = name[:-3]
+    name = re.sub(r"[\W]", "-", name).lower()
+    while "--" in name:
+        name = name.replace("--", "-")
+    return f"{name}.tf"

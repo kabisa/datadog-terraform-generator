@@ -13,6 +13,12 @@ variable "service" {
   default     = SERVICE_NAME
 }
 
+variable "service_display_name" {
+  description = "Readable version of service name of what you're monitoring."
+  type        = string
+  default     = null
+}
+
 variable "notification_channel" {
   description = "Channel to which datadog sends alerts, will be overridden by alerting_enabled if that's set to false"
   type        = string

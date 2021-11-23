@@ -1,7 +1,7 @@
 import re
 
 from datadog_terraform_generator.config_management import get_config_by_name
-from datadog_terraform_generator.gen_utils import find_between
+from datadog_terraform_generator.gen_utils import find_between, canonicalize_tf_name
 from datadog_terraform_generator.api import DdApi
 from datadog_terraform_generator.generate_tf_monitor import (
     load_search_replace_defaults,
@@ -151,7 +151,7 @@ def generate_generic_monitor(output_dir, data, monitor_name=None, param_override
         warning,
     )
     generate(output_dir, **vals)
-    return vals
+    return vals, module_name
 
 
 def determine_vals(
@@ -205,7 +205,7 @@ def shared_monitor_settings(monitor_name, data, name):
             monitor_name = name_parts[-2].strip()
         else:
             monitor_name = name_parts[-1].strip()
-    module_name = re.sub(r"[^\w]", "_", monitor_name).lower()
+    module_name = canonicalize_tf_name(monitor_name)
     critical = options["thresholds"]["critical"]
     warning = (
         options["thresholds"]["warning"] if "warning" in options["thresholds"] else None

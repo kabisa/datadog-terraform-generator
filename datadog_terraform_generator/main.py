@@ -48,11 +48,10 @@ if __name__ == "__main__":
         "ddtfgen",
         "--config",
         "tceu",
-        "monitor_from_id",
-        "2315399",
-        "/tmp/",
-        "--monitor_name",
-        "Profile response processing error",
+        "module",
+        "--from_query",
+        "datafactory scope:subscription_name:tme_bi_reporting_prod",
+        "/Users/sjuuljanssen/workspace/toyota-dd/modules/azure-data-factory",
     ]
     print(" ".join(sys.argv))
     main()

@@ -28,6 +28,7 @@ module "MODULE_NAME" {
   # module level vars
   env                  = var.env
   service              = var.service
+  service_display_name = var.service_display_name
   notification_channel = var.notification_channel
   additional_tags      = var.additional_tags
   locked               = var.locked
