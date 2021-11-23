@@ -154,6 +154,12 @@ def generate_generic_monitor(output_dir, data, monitor_name=None, param_override
     return vals, module_name
 
 
+def stringify_val(val) -> str:
+    if val is None:
+        return "null"
+    return str(val)
+
+
 def determine_vals(
     alert_message,
     monitor_name,
@@ -176,9 +182,9 @@ def determine_vals(
             "alert_message": alert_message,
             "recovery_message": recovery_message,
             "evaluation_period": evaluation_period,
-            "critical": str(critical),
-            "warning": str(warning),
-            "priority": str(priority),
+            "critical": stringify_val(critical),
+            "warning": stringify_val(warning),
+            "priority": stringify_val(priority),
             "service_name": service_name_cased,
         }
     )

@@ -16,3 +16,11 @@ def terraform_plan(target=None):
     if target:
         args.extend(["--target", target])
     return cli_call(args)
+
+
+def terraform_import(resource_path, resource_import_target):
+    return cli_call(["terraform", "import", resource_path, resource_import_target])
+
+
+def terraform_init():
+    return cli_call(["terraform", "init"])

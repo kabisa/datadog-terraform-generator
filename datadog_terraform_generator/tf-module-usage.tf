@@ -4,5 +4,5 @@ module "MODULE_NAME" {
   filter_str                 = ""
   service_check_include_tags = []
   additional_tags            = []
-  # service                  = ""
+  service                    = "SERVICE"
 }

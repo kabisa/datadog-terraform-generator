@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 import subprocess
+import sys
 from typing import Dict, Any, List
 
 from argcomplete.completers import ChoicesCompleter
@@ -42,6 +43,8 @@ def fill_template(template: str, vals: Dict[str, Any]) -> str:
         for ky, vl in vals.items():
             ky_upper = ky.upper()
             if ky_upper in output:
+                if vl is None:
+                    vl = "null"
                 output = output.replace(ky_upper, vl)
                 changes_applied = True
         if not changes_applied:
@@ -183,7 +186,10 @@ def get_arg_parser() -> argparse.ArgumentParser:
 def cli_call(command: List[str], enable_printing=True) -> str:
     if enable_printing:
         print(" ".join(command))
-    output = subprocess.check_output(command)
+    try:
+        output = subprocess.check_output(command)
+    except subprocess.CalledProcessError:
+        sys.exit()
     output = output.decode("utf-8")
     if enable_printing:
         print(output)
@@ -195,7 +201,7 @@ def input_question(question: str, default_value: str) -> bool:
     other_val = "n" if default_value == "Y" else "y"
     input_value = input(f"{question} [{default_value}{other_val}]")
     input_value = input_value.strip().upper()
-    return input_value == default_value or input_value == ""
+    return input_value == "Y" or (input_value == "" and default_value == "Y")
 
 
 def canonicalize_tf_name(name: str) -> str:
@@ -205,7 +211,7 @@ def canonicalize_tf_name(name: str) -> str:
 def canonicalize_tf_file_name(name: str) -> str:
     if name.endswith(".tf"):
         name = name[:-3]
-    name = re.sub(r"[\W]", "-", name).lower()
+    name = re.sub(r"[\W]", "-", name).lower().replace("_", "-")
     while "--" in name:
         name = name.replace("--", "-")
     return f"{name}.tf"
