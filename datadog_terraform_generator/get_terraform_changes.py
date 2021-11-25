@@ -1,3 +1,4 @@
+from datadog_terraform_generator.hcl_completer import HclCompleter
 from datadog_terraform_generator.terraform_calls import terraform_plan
 
 DESTROY_SEQ = "\033[0m will be \033[1m\033[31mdestroyed\033[0m\033[0m"
@@ -46,5 +47,5 @@ def add_sub_parser(subparsers):
         "--target",
         help="terraform target",
         default=None,
-    )
+    ).completer = HclCompleter()
     parser.set_defaults(func=main)

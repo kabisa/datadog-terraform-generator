@@ -1,13 +1,23 @@
 import argparse
+import hashlib
+import json
 import os
 import re
+import shelve
+import stat
 import subprocess
 import sys
+import time
 from typing import Dict, Any, List
 
 from argcomplete.completers import ChoicesCompleter
 
 from datadog_terraform_generator.config_management import load_config, list_config_names
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+CACHE_DIR = os.path.join(dir_path, ".cache")
+if not os.path.isdir(CACHE_DIR):
+    os.makedirs(CACHE_DIR)
 
 
 def get_local_abs_path(file_name):
@@ -215,3 +225,49 @@ def canonicalize_tf_file_name(name: str) -> str:
     while "--" in name:
         name = name.replace("--", "-")
     return f"{name}.tf"
+
+
+def hash_args_kwargs(args, kwargs):
+    """
+    This generates a cache key based on the args and kwargs of a function.
+    We need a predictable way to hash them in order to get the same key for the
+    same function parameters. Pythons hash() function is non-deterministic for
+    security reasons. We in stead do a predictable json dump and then hash that
+    string. Using MD5 is fast and good enough (collision-wise) for these sort of
+    things.
+    """
+    key = json.dumps(
+        {"args": args, "kwargs": kwargs},
+        ensure_ascii=False,
+        sort_keys=True,
+        indent=None,
+        separators=(",", ":"),
+    )
+    return hashlib.md5(key.encode("utf-8")).hexdigest()
+
+
+def file_age_in_seconds(pathname):
+    return time.time() - os.stat(pathname)[stat.ST_MTIME]
+
+
+def file_cached(func, max_cache_age_seconds=None):
+    cache_path = os.path.join(CACHE_DIR, func.__name__)
+    if max_cache_age_seconds:
+        if file_age_in_seconds(cache_path) > max_cache_age_seconds:
+            os.remove(cache_path)
+
+    shelve_storage = shelve.open(cache_path)
+
+    def wrapper(*args, **kwargs):
+
+        key_hash = hash_args_kwargs(args, kwargs)
+        if key_hash not in shelve_storage:
+            print(f"{func.__name__} {key_hash} {args} {kwargs}")
+            shelve_storage[key_hash] = func(*args, **kwargs)
+        if isinstance(shelve_storage[key_hash], dict) and shelve_storage[key_hash].get(
+            "error"
+        ):
+            del shelve_storage[key_hash]
+        return shelve_storage[key_hash]
+
+    return wrapper

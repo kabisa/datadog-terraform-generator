@@ -151,7 +151,7 @@ def generate_generic_monitor(output_dir, data, monitor_name=None, param_override
         warning,
     )
     generate(output_dir, **vals)
-    return vals, module_name
+    return vals, module_name, filter_str
 
 
 def stringify_val(val) -> str:

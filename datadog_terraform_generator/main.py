@@ -15,6 +15,7 @@ import datadog_terraform_generator.get_host_list as get_host_list
 import datadog_terraform_generator.generate_service_file as generate_service_file
 import datadog_terraform_generator.query as query
 import datadog_terraform_generator.get_terraform_changes as get_terraform_changes
+import datadog_terraform_generator.import_generated_module as import_generated_module
 
 
 def main():
@@ -36,6 +37,7 @@ def main():
         generate_service_file.add_sub_parser(sub_parser)
         query.add_sub_parser(sub_parser)
         get_terraform_changes.add_sub_parser(sub_parser)
+        import_generated_module.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
