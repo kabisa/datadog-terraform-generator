@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import time
+from os.path import isfile
 from typing import Dict, Any, List
 
 from argcomplete.completers import ChoicesCompleter
@@ -247,10 +248,12 @@ def hash_args_kwargs(args, kwargs):
 
 
 def file_age_in_seconds(pathname):
-    return time.time() - os.stat(pathname)[stat.ST_MTIME]
+    if isfile(pathname):
+        return time.time() - os.stat(pathname)[stat.ST_MTIME]
+    return -1
 
 
-def file_cached(func, max_cache_age_seconds=None):
+def file_cached(func, max_cache_age_seconds=None, printing_enabled=False):
     cache_path = os.path.join(CACHE_DIR, func.__name__)
     if max_cache_age_seconds:
         if file_age_in_seconds(cache_path) > max_cache_age_seconds:
@@ -262,7 +265,8 @@ def file_cached(func, max_cache_age_seconds=None):
 
         key_hash = hash_args_kwargs(args, kwargs)
         if key_hash not in shelve_storage:
-            print(f"{func.__name__} {key_hash} {args} {kwargs}")
+            if printing_enabled:
+                print(f"{func.__name__} {key_hash} {args} {kwargs}")
             shelve_storage[key_hash] = func(*args, **kwargs)
         if isinstance(shelve_storage[key_hash], dict) and shelve_storage[key_hash].get(
             "error"

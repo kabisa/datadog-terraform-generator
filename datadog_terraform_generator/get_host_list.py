@@ -7,7 +7,9 @@ from datadog_terraform_generator.api import DdApi
 from datadog_terraform_generator.config_management import get_config_by_name
 
 
-def get_host_list(dd_api: DdApi, host_name_pattern=None, tags_pattern=None):
+def get_host_list(
+    dd_api: DdApi, host_name_pattern=None, tags_pattern=None, show_agent_version=False
+):
     if host_name_pattern:
         host_name_pattern = host_name_pattern.lower()
     if tags_pattern:
@@ -53,17 +55,22 @@ def get_ip_from_gohai(gohai):
         return gohai["network"].get("ipaddress", "")
 
 
-def print_hosts(hosts):
+def print_hosts(hosts, show_agent_version=False):
     cnt = 0
     for host in sorted(hosts, key=lambda h: (get_env_from_host(h), h["name"])):
         cnt += 1
         tags = get_tags_from_host(host)
+        agent_version = (
+            host["meta"].get("agent_version", "") if show_agent_version else ""
+        )
+        if show_agent_version and not agent_version:
+            continue
         if "gohai" in host["meta"]:
             gohai = json.loads(host["meta"]["gohai"])
             ip_address = get_ip_from_gohai(gohai)
-            print(host["name"], tags, ip_address)
+            print(host["name"], tags, ip_address, agent_version)
         else:
-            print(host["name"], tags)
+            print(host["name"], tags, agent_version)
     print(f"Found {cnt} hosts")
 
 
@@ -93,7 +100,8 @@ def main(args):
             dd_api=DdApi.from_config(config),
             host_name_pattern=args.host_name_pattern,
             tags_pattern=args.tags_pattern,
-        )
+        ),
+        show_agent_version=args.show_agent_version,
     )
 
 
@@ -120,4 +128,5 @@ def add_sub_parser(subparsers):
              [!seq]  matches any char not in seq
              """,
     )
+    parser.add_argument("--show_agent_version", action="store_true")
     parser.set_defaults(func=main)

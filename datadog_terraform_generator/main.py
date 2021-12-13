@@ -46,14 +46,6 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv = [
-        "ddtfgen",
-        "--config",
-        "tceu",
-        "module",
-        "--from_query",
-        "datafactory scope:subscription_name:tme_bi_reporting_prod",
-        "/Users/sjuuljanssen/workspace/toyota-dd/modules/azure-data-factory",
-    ]
+    sys.argv = ["ddtfgen", "get_host_list", "--show_agent_version"]
     print(" ".join(sys.argv))
     main()
