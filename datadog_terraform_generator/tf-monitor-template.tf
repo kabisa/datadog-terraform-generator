@@ -12,7 +12,7 @@ module "MODULE_NAME" {
   query = "QUERY"
 
   # alert specific configuration
-  require_full_window = false
+  require_full_window = true
   alert_message       = "ALERT_MESSAGE"
   recovery_message    = "RECOVERY_MESSAGE"
 
