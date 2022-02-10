@@ -17,19 +17,19 @@ module "MODULE_NAME" {
   recovery_message    = "RECOVERY_MESSAGE"
 
   # monitor level vars
-  enabled            = var.MODULE_NAME_enabled
-  alerting_enabled   = var.MODULE_NAME_alerting_enabled
-  warning_threshold  = var.MODULE_NAME_warning
-  critical_threshold = var.MODULE_NAME_critical
-  priority           = var.MODULE_NAME_priority
-  docs               = var.MODULE_NAME_docs
-  note               = var.MODULE_NAME_note
+  enabled              = var.MODULE_NAME_enabled
+  alerting_enabled     = var.MODULE_NAME_alerting_enabled
+  warning_threshold    = var.MODULE_NAME_warning
+  critical_threshold   = var.MODULE_NAME_critical
+  priority             = var.MODULE_NAME_priority
+  docs                 = var.MODULE_NAME_docs
+  note                 = var.MODULE_NAME_note
+  notification_channel = try(coalesce(var.MODULE_NAME_notification_channel_override, var.notification_channel), "")
 
   # module level vars
   env                  = var.env
   service              = var.service
   service_display_name = var.service_display_name
-  notification_channel = var.notification_channel
   additional_tags      = var.additional_tags
   locked               = var.locked
   name_prefix          = var.name_prefix

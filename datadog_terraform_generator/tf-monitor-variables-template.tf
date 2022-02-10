@@ -69,3 +69,8 @@ variable "MODULE_NAME_priority" {
   type    = number
   default = PRIORITY
 }
+
+variable "MODULE_NAME_notification_channel_override" {
+  type    = string
+  default = ""
+}
