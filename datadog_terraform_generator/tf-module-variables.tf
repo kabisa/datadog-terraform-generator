@@ -60,3 +60,9 @@ variable "service_check_exclude_tags" {
   type    = list(string)
   default = []
 }
+
+variable "priority_offset" {
+  description = "With this you can set higher or lower priority for non prod environments, it affects all the monitors at once"
+  type = number
+  default = 0
+}

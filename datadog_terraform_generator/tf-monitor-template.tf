@@ -21,7 +21,7 @@ module "MODULE_NAME" {
   alerting_enabled     = var.MODULE_NAME_alerting_enabled
   warning_threshold    = var.MODULE_NAME_warning
   critical_threshold   = var.MODULE_NAME_critical
-  priority             = var.MODULE_NAME_priority
+  priority             = min(var.MODULE_NAME_priority + var.priority_offset, 5)
   docs                 = var.MODULE_NAME_docs
   note                 = var.MODULE_NAME_note
   notification_channel = try(coalesce(var.MODULE_NAME_notification_channel_override, var.notification_channel), "")
