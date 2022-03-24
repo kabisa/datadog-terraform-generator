@@ -16,6 +16,8 @@ import datadog_terraform_generator.generate_service_file as generate_service_fil
 import datadog_terraform_generator.query as query
 import datadog_terraform_generator.get_terraform_changes as get_terraform_changes
 import datadog_terraform_generator.import_generated_module as import_generated_module
+import datadog_terraform_generator.downtimes as downtimes
+import datadog_terraform_generator.monitors as monitors
 
 
 def main():
@@ -38,6 +40,8 @@ def main():
         query.add_sub_parser(sub_parser)
         get_terraform_changes.add_sub_parser(sub_parser)
         import_generated_module.add_sub_parser(sub_parser)
+        downtimes.add_sub_parser(sub_parser)
+        monitors.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -46,6 +50,6 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv = ["ddtfgen", "get_host_list", "--show_agent_version"]
+    sys.argv = ["ddtfgen", "monitors", "--monitor_id", "828688"]
     print(" ".join(sys.argv))
     main()
