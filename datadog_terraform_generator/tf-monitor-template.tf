@@ -6,7 +6,8 @@ locals {
 }
 
 module "MODULE_NAME" {
-  source = "git@github.com:kabisa/terraform-datadog-generic-monitor.git?ref=GENERIC_MONITOR_VERSION"
+  source  = "kabisa/generic-monitor/datadog"
+  version = "GENERIC_MONITOR_VERSION"
 
   name  = "MONITOR_NAME"
   query = "QUERY"
