@@ -17,6 +17,15 @@ class DdApi:
                 "Content-Type": "application/json",
             },
         )
+        if req.status_code == 429:
+            print(
+                "Max requests per second:",
+                int(req.headers["x-ratelimit-limit"])
+                / int(req.headers["x-ratelimit-period"]),
+                "\nOr sleep time:",
+                int(req.headers["x-ratelimit-period"])
+                / int(req.headers["x-ratelimit-limit"]),
+            )
         req.raise_for_status()
         return req.json()
 

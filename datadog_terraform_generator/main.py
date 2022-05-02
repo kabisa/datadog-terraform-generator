@@ -18,6 +18,7 @@ import datadog_terraform_generator.get_terraform_changes as get_terraform_change
 import datadog_terraform_generator.import_generated_module as import_generated_module
 import datadog_terraform_generator.downtimes as downtimes
 import datadog_terraform_generator.monitors as monitors
+import datadog_terraform_generator.list_metric_usage as list_metric_usage
 
 
 def main():
@@ -42,6 +43,7 @@ def main():
         import_generated_module.add_sub_parser(sub_parser)
         downtimes.add_sub_parser(sub_parser)
         monitors.add_sub_parser(sub_parser)
+        list_metric_usage.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -50,6 +52,11 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv = ["ddtfgen", "monitors", "--monitor_id", "828688"]
+    sys.argv = [
+        "ddtfgen",
+        "get_metric_list",
+        "--prefix",
+        "digazu.flink_taskmanager_job_task_operator_",
+    ]
     print(" ".join(sys.argv))
     main()

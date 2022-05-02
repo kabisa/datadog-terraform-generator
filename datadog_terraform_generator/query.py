@@ -24,22 +24,25 @@ def interpret_time(time) -> Arrow:
 
 def query(dd_api: DdApi, _from: Arrow, to: Arrow, qry):
     params = {"from": int(_from.timestamp()), "to": int(to.timestamp()), "query": qry}
-    resp = dd_api.request(f"api/v1/query?{urlencode(params)}")
-    print(json.dumps(resp))
+    return dd_api.request(f"api/v1/query?{urlencode(params)}")
 
 
 def main(args):
     config = get_config_by_name(args.config_name)
-    query(
+    resp = query(
         dd_api=DdApi.from_config(config),
         _from=interpret_time(getattr(args, "from")),
         to=interpret_time(args.to),
         qry=args.query,
     )
+    print(json.dumps(resp))
 
 
 def add_sub_parser(subparsers):
-    parser = subparsers.add_parser("query")
+    parser = subparsers.add_parser(
+        "query",
+        help="same syntax as in alerts or dashboard widgets, example max:synthetics.http.response.time{*} by {url}",
+    )
     parser.add_argument(
         "from", help="Start of the queried time period, seconds since the Unix epoch."
     )

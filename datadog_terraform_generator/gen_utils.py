@@ -275,3 +275,15 @@ def file_cached(func, max_cache_age_seconds=None, printing_enabled=False):
         return shelve_storage[key_hash]
 
     return wrapper
+
+
+def cannonicalize_tag(value: str) -> str:
+    subbed = re.sub("[^a-z0-9\\-_:.\\/]", "_", value.lower())
+    subbed = re.sub("_+", "", subbed)
+    subbed = re.sub("^[^a-z]+", "", subbed)
+    subbed = re.sub("_+$", "", subbed)
+    return subbed
+
+
+if __name__ == "__main__":
+    print(cannonicalize_tag("__group:TME_IS_PAN-E_CRM_Support"))
