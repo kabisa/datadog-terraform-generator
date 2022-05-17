@@ -56,6 +56,11 @@ Get a summary of changes that Terraform wishes to perform
 ddtfgen get_terraform_changes
 ```
 
+Get monitor list from query:
+```bash
+ddtfgen monitors --query 'service:"kubernetes" notification:servicenow-toyotaeurope'
+```
+
 Generate the TF code for log metrics
 
 ## Autocompletions

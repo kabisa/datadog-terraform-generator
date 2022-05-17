@@ -1,5 +1,3 @@
-from os.path import isfile
-
 import yaml
 
 from datadog_terraform_generator.api import DdApi
@@ -34,19 +32,11 @@ def generate(dd_api, envs, file_name, config_name):
                 dependees[depends_on] = []
             dependees[depends_on].append(service)
 
-    manual_config = {}
-    if isfile(file_name):
-        with open(file_name, "r") as service_calls_fl:
-            existing = yaml.safe_load(service_calls_fl)
-            manual_config = existing.get("manual_configurations", {})
-
     with open(file_name, "w") as service_calls_fl:
         service_calls_fl.write(
             "# This file is generated with the following command:\n"
             f"# ddtfgen --config {config_name} {COMMAND_NAME} {envs} {FILE_NAME_ARG} {file_name}\n"
-            "# configurations under the manual_configurations section wil remain if regenerated\n"
         )
-        service_dependencies["manual_configurations"] = manual_config
         yaml.safe_dump(service_dependencies, service_calls_fl, sort_keys=True)
         print("Written", file_name)
 

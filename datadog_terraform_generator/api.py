@@ -8,6 +8,8 @@ class DdApi:
         self.app_key = app_key
 
     def request(self, path):
+        if self.api_host.endswith("/") and path.startswith("/"):
+            path = path[1:]
         url = f"{self.api_host}{path}"
         req = requests.get(
             url,
