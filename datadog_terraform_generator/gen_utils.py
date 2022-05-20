@@ -286,4 +286,4 @@ def cannonicalize_tag(value: str) -> str:
 
 
 if __name__ == "__main__":
-    print(cannonicalize_tag("group:TME_IS_A2D_ Support second line"))
+    print(cannonicalize_tag("group:TME_IS_R&D_CEP_support"))

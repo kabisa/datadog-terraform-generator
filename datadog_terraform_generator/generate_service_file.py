@@ -1,3 +1,5 @@
+import time
+
 import yaml
 
 from datadog_terraform_generator.api import DdApi
@@ -8,8 +10,11 @@ COMMAND_NAME = "services_file"
 FILE_NAME_ARG = "--file_name"
 
 
-def get_services(dd_api: DdApi, env):
-    return dd_api.request(path=f"api/v1/service_dependencies?env={env}")
+def get_services(dd_api: DdApi, env, start=None):
+    if start is None:
+        # this would default to 1 hour, and that's a bit short
+        start = int(time.time()) - 3600 * 24 * 7
+    return dd_api.request(path=f"api/v1/service_dependencies?env={env}&start={start}")
 
 
 def generate(dd_api, envs, file_name, config_name):

@@ -19,6 +19,7 @@ import datadog_terraform_generator.import_generated_module as import_generated_m
 import datadog_terraform_generator.downtimes as downtimes
 import datadog_terraform_generator.monitors as monitors
 import datadog_terraform_generator.list_metric_usage as list_metric_usage
+import datadog_terraform_generator.module_versions as module_versions
 
 
 def main():
@@ -44,6 +45,7 @@ def main():
         downtimes.add_sub_parser(sub_parser)
         monitors.add_sub_parser(sub_parser)
         list_metric_usage.add_sub_parser(sub_parser)
+        module_versions.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
