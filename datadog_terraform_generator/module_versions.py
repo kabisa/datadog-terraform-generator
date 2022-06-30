@@ -179,7 +179,7 @@ def upgrade_modules_in_file(scan_folder, file_path, registry):
                         "git@github.com:kabisa/terraform-datadog-", ""
                     )
                     module_name = source
-                    tf_registry_version = registry.get(module_name)
+                    tf_registry_version = registry.get(module_name, {}).get("version")
                     # regardless of version we put in the registry version
                     new_source_name = f"kabisa/{module_name}/datadog"
                     lines.append(f'  source  = "{new_source_name}"')
@@ -193,7 +193,7 @@ def upgrade_modules_in_file(scan_folder, file_path, registry):
                 module_name = source
                 if "/" in module_name:
                     module_name = module_name.split("/")[1]
-                tf_registry_version = registry.get(module_name)
+                tf_registry_version = registry.get(module_name, {}).get("version")
                 if should_update_version(version_tuple(version), tf_registry_version):
                     lines.append(
                         f'  version = "{version_tuple_str(tf_registry_version)}"'
@@ -210,18 +210,45 @@ def upgrade_modules_in_file(scan_folder, file_path, registry):
             fl.write("\n".join(lines))
 
 
+def list_existing_modules(args):
+    return _list_existing_modules(
+        markdown_format=args.markdown_format, skip_base_modules=args.skip_base_modules
+    )
+
+
+def _list_existing_modules(markdown_format=True, skip_base_modules=True):
+    registry = get_module_registry()
+    for key in sorted(registry):
+        if skip_base_modules and key in ("service-check-monitor", "generic-monitor"):
+            continue
+        if markdown_format:
+            url = registry[key]["url"]
+            print(f"- [{key}]({url})")
+        else:
+            print(key)
+    print("")
+
+
 def upgrade_modules(args):
-    modules = get_kabisa_datadog_modules()
-    registry = {}
-    for module in modules:
-        maker, module_name, provider, version = module["id"].split("/")
-        registry[module_name] = version_tuple(version)
+    registry = get_module_registry()
 
     scan_folder = args.path
     _, files = get_terraform_files(scan_folder)
     files = [os.path.relpath(file, scan_folder) for file in files]
     for file in files:
         upgrade_modules_in_file(scan_folder, file, registry)
+
+
+def get_module_registry():
+    modules = get_kabisa_datadog_modules()
+    registry = {}
+    for module in modules:
+        maker, module_name, provider, version = module["id"].split("/")
+        registry[module_name] = {
+            "version": version_tuple(version),
+            "url": f"https://registry.terraform.io/modules/kabisa/{module_name}/datadog",
+        }
+    return registry
 
 
 def add_sub_parser(subparsers):
@@ -240,6 +267,11 @@ def add_sub_parser(subparsers):
     parser.add_argument("path")
     parser.set_defaults(func=upgrade_modules)
 
+    parser = subparsers.add_parser("list_existing_modules")
+    parser.add_argument("markdown_format", action="store_true", default=True)
+    parser.add_argument("skip_base_modules", action="store_true", default=True)
+    parser.set_defaults(func=list_existing_modules)
+
 
 if __name__ == "__main__":
 
@@ -248,4 +280,4 @@ if __name__ == "__main__":
 
     args = Obj()
     args.path = "/Users/sjuuljanssen/workspace/toyota-dd/modules/termproxy"
-    upgrade_modules(args)
+    list_existing_modules(args)

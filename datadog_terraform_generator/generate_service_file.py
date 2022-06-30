@@ -18,24 +18,30 @@ def get_services(dd_api: DdApi, env, start=None):
 
 
 def generate(dd_api, envs, file_name, config_name):
-    uncleaned_deps = {}
+    depends_on = {}
     for env in envs.split(","):
         services = get_services(dd_api, env=env)
         for service_name, service_dct in services.items():
-            uncleaned_deps[service_name] = service_dct["calls"]
+            depends_on[service_name] = service_dct["calls"]
 
     dependees = {}
-    service_dependencies = {"depends_on": uncleaned_deps, "dependees": dependees}
+    service_dependencies = {"depends_on": depends_on, "dependees": dependees}
 
-    for service, depends_ons in uncleaned_deps.items():
+    for service, depends_ons in depends_on.items():
         # this makes sure all services are listed
         if service not in dependees:
             dependees[service] = []
-        for depends_on in depends_ons:
+        for dep_on in depends_ons:
             # make sure this service also exists
-            if depends_on not in dependees:
-                dependees[depends_on] = []
-            dependees[depends_on].append(service)
+            if dep_on not in dependees:
+                dependees[dep_on] = []
+            dependees[dep_on].append(service)
+
+    for ky, vl in dependees.items():
+        dependees[ky] = list(sorted(vl))
+
+    for ky, vl in depends_on.items():
+        depends_on[ky] = list(sorted(vl))
 
     with open(file_name, "w") as service_calls_fl:
         service_calls_fl.write(
