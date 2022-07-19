@@ -253,18 +253,18 @@ def get_module_registry():
 
 def add_sub_parser(subparsers):
     parser = subparsers.add_parser("scan_module_versions")
-    parser.add_argument("path")
+    parser.add_argument("--path", default=".")
     parser.set_defaults(func=scan_module_versions)
 
     parser = subparsers.add_parser("list_module_versions")
     parser.set_defaults(func=list_module_versions)
 
     parser = subparsers.add_parser("show_module_drift")
-    parser.add_argument("path")
+    parser.add_argument("--path", default=".")
     parser.set_defaults(func=show_module_drift)
 
     parser = subparsers.add_parser("upgrade_modules")
-    parser.add_argument("path")
+    parser.add_argument("--path", default=".")
     parser.set_defaults(func=upgrade_modules)
 
     parser = subparsers.add_parser("list_existing_modules")

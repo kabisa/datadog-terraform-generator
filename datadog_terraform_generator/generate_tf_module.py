@@ -168,6 +168,11 @@ def main(args):
                     filter_str = filter_str_list[int(response)]
                 else:
                     filter_str = response
+        importing_module_file_name_input = input(
+            f"Where do you want your usage? [./{importing_module_file_name}]:"
+        )
+        if importing_module_file_name_input:
+            importing_module_file_name = importing_module_file_name_input
 
         if not filter_str:
             filter_str = input("please provide a filter str [*]") or "*"
@@ -210,7 +215,7 @@ def add_sub_parser(subparsers):
     )
     parser.add_argument("--service_name", help="Name of the service", default=None)
     parser.add_argument(
-        "--provider_version", help="Minimal version of datadog provider", default="3.4"
+        "--provider_version", help="Minimal version of datadog provider", default="3.12"
     )
     parser.add_argument(
         "--from_query",
