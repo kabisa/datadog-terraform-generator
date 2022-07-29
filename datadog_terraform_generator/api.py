@@ -29,7 +29,10 @@ class DdApi:
                 / int(req.headers["x-ratelimit-limit"]),
             )
         req.raise_for_status()
-        return req.json()
+        data = req.json()
+        if data.get("status", "") == "error":
+            raise Exception(f"API quest failed: {data['error']}")
+        return data
 
     @classmethod
     def from_config(cls, config):
