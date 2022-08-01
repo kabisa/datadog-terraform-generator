@@ -33,7 +33,7 @@ def table(
         filter_str=filter_str,
         group_by_str=group_by_str,
         from_arrow=from_arrow,
-        to_arrow=to_arrow
+        to_arrow=to_arrow,
     )
 
     rows = metric_data_to_rows(metric_data, metric_aggregations)
@@ -43,7 +43,9 @@ def table(
         writer.writerows(rows)
 
 
-def query_metrics(agg_metric_names, dd_api, filter_str, group_by_str, from_arrow, to_arrow):
+def query_metrics(
+    agg_metric_names, dd_api, filter_str, group_by_str, from_arrow, to_arrow
+):
     metric_data = {}
     metric_aggregations = {}
     for agg_metric in agg_metric_names:
@@ -61,7 +63,9 @@ def query_metrics(agg_metric_names, dd_api, filter_str, group_by_str, from_arrow
     return metric_aggregations, metric_data
 
 
-def metric_data_to_rows(metric_data: Dict[str, Dict], metric_aggregations: Dict[str, str]) -> List[List]:
+def metric_data_to_rows(
+    metric_data: Dict[str, Dict], metric_aggregations: Dict[str, str]
+) -> List[List]:
     headers_written = False
     headers = ["tagset"]
     output_list = [headers]
@@ -93,7 +97,10 @@ def query_res_to_metric_data(query_res, metric_data: Dict):
 
 if __name__ == "__main__":
     table(
-        agg_metric_names=["max:rabbitmq.queue.messages", "max:rabbitmq.queue.consumers"],
+        agg_metric_names=[
+            "max:rabbitmq.queue.messages",
+            "max:rabbitmq.queue.consumers",
+        ],
         _from="1 hours ago",
         to="now",
         group_by=["rabbitmq_queue", "rabbitmq_vhost"],
