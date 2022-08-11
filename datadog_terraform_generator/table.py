@@ -1,6 +1,7 @@
 import csv
 import locale
 import math
+import sys
 from typing import Dict, List
 
 from datadog_terraform_generator.api import DdApi
@@ -38,9 +39,12 @@ def table(
 
     rows = metric_data_to_rows(metric_data, metric_aggregations)
 
-    with open(output_path, "w") as fl:
-        writer = csv.writer(fl)
-        writer.writerows(rows)
+    if output_path == "stdout":
+        fl = sys.stdout
+    else:
+        fl = open(output_path, "w")
+    writer = csv.writer(fl)
+    writer.writerows(rows)
 
 
 def query_metrics(
@@ -91,8 +95,45 @@ def query_res_to_metric_data(query_res, metric_data: Dict):
         if cur_metric not in metric_data[tagset_str]:
             metric_data[tagset_str][cur_metric] = -math.inf
         for point in item["pointlist"]:
+            if point[1] is None:
+                continue
             if point[1] > metric_data[tagset_str][cur_metric]:
                 metric_data[tagset_str][cur_metric] = point[1]
+
+
+def main(args):
+    table(
+        agg_metric_names=[
+            "max:rabbitmq.queue.messages",
+            "max:rabbitmq.queue.consumers",
+        ],
+        _from=getattr(args, "from"),
+        to=args.to,
+        group_by=args.group_by,
+        output_path=args.output,
+    )
+
+
+def add_sub_parser(subparsers):
+    parser = subparsers.add_parser("table")
+    parser.add_argument(
+        "--agg_metric_names",
+        nargs="+",
+        help="Metric names and their aggregations. This is your columns. Example: agg_metric_names agg:metric.name agg:metric.name2",
+    )
+    parser.add_argument(
+        "--group_by",
+        nargs="+",
+        help="Group By. This is your rows. Example: agg_metric_names agg:metric.name agg:metric.name2",
+    )
+    parser.add_argument(
+        "--from", help="Start of the queried time period, seconds since the Unix epoch."
+    )
+    parser.add_argument(
+        "--to", help="End of the queried time period, seconds since the Unix epoch."
+    )
+    parser.add_argument("--output", help="Filename to write to", default="stdout")
+    parser.set_defaults(func=main)
 
 
 if __name__ == "__main__":
@@ -103,6 +144,6 @@ if __name__ == "__main__":
         ],
         _from="1 hours ago",
         to="now",
-        group_by=["rabbitmq_queue", "rabbitmq_vhost"],
+        group_by=["rabbitmq_queue", "rabbitmq_vhost", "cloudamqp-name"],
         output_path="tmp.csv",
     )

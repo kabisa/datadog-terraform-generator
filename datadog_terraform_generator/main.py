@@ -20,6 +20,7 @@ import datadog_terraform_generator.downtimes as downtimes
 import datadog_terraform_generator.monitors as monitors
 import datadog_terraform_generator.list_metric_usage as list_metric_usage
 import datadog_terraform_generator.module_versions as module_versions
+import datadog_terraform_generator.table as table
 
 
 def main():
@@ -46,6 +47,7 @@ def main():
         monitors.add_sub_parser(sub_parser)
         list_metric_usage.add_sub_parser(sub_parser)
         module_versions.add_sub_parser(sub_parser)
+        table.add_sub_parser(sub_parser)
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -56,9 +58,17 @@ def main():
 if __name__ == "__main__":
     sys.argv = [
         "ddtfgen",
-        "get_metric_list",
-        "--prefix",
-        "digazu.flink_taskmanager_job_task_operator_",
+        "table",
+        "--agg_metric_names",
+        "max:rabbitmq.queue.messages",
+        "max:rabbitmq.queue.consumers",
+        "--group_by",
+        "rabbitmq_queue",
+        "rabbitmq_vhost",
+        "--from",
+        "1 hours ago",
+        "--to",
+        "now",
     ]
     print(" ".join(sys.argv))
     main()

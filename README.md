@@ -61,6 +61,11 @@ Get monitor list from query:
 ddtfgen monitors --query 'service:"kubernetes" notification:servicenow-toyotaeurope'
 ```
 
+Generate a csv table:
+```bash
+ddtfgen table --agg_metric_names max:rabbitmq.queue.messages max:rabbitmq.queue.consumers --group_by rabbitmq_queue rabbitmq_vhost --from 1 hours ago --to now
+```
+
 Generate the TF code for log metrics
 
 ## Autocompletions
