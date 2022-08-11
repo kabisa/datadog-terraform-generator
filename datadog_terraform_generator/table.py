@@ -103,10 +103,7 @@ def query_res_to_metric_data(query_res, metric_data: Dict):
 
 def main(args):
     table(
-        agg_metric_names=[
-            "max:rabbitmq.queue.messages",
-            "max:rabbitmq.queue.consumers",
-        ],
+        agg_metric_names=args.agg_metric_names,
         _from=getattr(args, "from"),
         to=args.to,
         group_by=args.group_by,
