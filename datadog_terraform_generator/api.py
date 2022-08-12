@@ -7,18 +7,33 @@ class DdApi:
         self.api_key = api_key
         self.app_key = app_key
 
-    def request(self, path):
+    def request(self, path, data=None):
+        if data is None:
+            req = requests.get(
+                url=self.check_url(path),
+                headers=self.get_headers(),
+            )
+        else:
+            req = requests.post(
+                url=self.check_url(path), headers=self.get_headers(), json=data
+            )
+        return self.read_response(req)
+
+    def get_headers(self):
+        return {
+            "DD-API-KEY": self.api_key,
+            "DD-APPLICATION-KEY": self.app_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def check_url(self, path):
         if self.api_host.endswith("/") and path.startswith("/"):
             path = path[1:]
         url = f"{self.api_host}{path}"
-        req = requests.get(
-            url,
-            headers={
-                "DD-API-KEY": self.api_key,
-                "DD-APPLICATION-KEY": self.app_key,
-                "Content-Type": "application/json",
-            },
-        )
+        return url
+
+    def read_response(self, req):
         if req.status_code == 429:
             print(
                 "Max requests per second:",

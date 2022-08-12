@@ -21,9 +21,9 @@ def init_config(*args) -> Dict:
             sys.exit()
 
     config_name = input("Config name:")
-    datadog_url = input("Datadog url [https://app.datadoghq.eu/]:")
+    datadog_url = input("Datadog url [https://api.datadoghq.eu/]:")
     if not datadog_url:
-        datadog_url = "https://app.datadoghq.eu/"
+        datadog_url = "https://api.datadoghq.eu/"
 
     api_key = input("Api Key:")
     app_key = input("Application Key:")
