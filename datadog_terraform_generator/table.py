@@ -1,3 +1,4 @@
+import abc
 import csv
 import locale
 import math
@@ -7,6 +8,85 @@ from typing import Dict, List
 from datadog_terraform_generator.api import DdApi
 from datadog_terraform_generator.config_management import get_config_by_name
 from datadog_terraform_generator.query import query, interpret_time
+
+
+class MetricAggregator(abc.ABC):
+    def __int__(self):
+        raise NotImplementedError("__int__")
+
+    def on_value(self, value):
+        raise NotImplementedError("on_value")
+
+    def get_result(self):
+        raise NotImplementedError("get_result")
+
+
+class MaxAggregator(MetricAggregator):
+    def __init__(self):
+        self.max = -math.inf
+
+    def on_value(self, value):
+        if value > self.max:
+            self.max = value
+
+    def get_result(self):
+        return self.max
+
+
+class MinAggregator(MetricAggregator):
+    def __init__(self):
+        self.min = math.inf
+
+    def on_value(self, value):
+        if value < self.min:
+            self.min = value
+
+    def get_result(self):
+        return self.min
+
+
+class AvgAggregator(MetricAggregator):
+    def __init__(self):
+        self.values = []
+
+    def on_value(self, value):
+        self.values.append(value)
+
+    def get_result(self):
+        if self.values:
+            return sum(self.values) / len(self.values)
+
+
+class LastAggregator(MetricAggregator):
+    def __init__(self):
+        self.value = None
+
+    def on_value(self, value):
+        self.value = value
+
+    def get_result(self):
+        return self.value
+
+
+class FirstAggregator(MetricAggregator):
+    def __init__(self):
+        pass
+
+    def on_value(self, value):
+        if not hasattr(self, "value"):
+            self.value = value
+
+    def get_result(self):
+        return getattr(self, "value")
+
+
+SUPPORTED_AGGRETATIONS = {
+    "min": MinAggregator,
+    "max": MaxAggregator,
+    "avg": AvgAggregator,
+    "last": LastAggregator,
+    "first": FirstAggregator,
+}
 
 
 def table(
@@ -54,7 +134,7 @@ def query_metrics(
     metric_aggregations = {}
     for agg_metric in agg_metric_names:
         aggregation, metric_name = agg_metric.split(":", maxsplit=1)
-        assert aggregation == "max", "our aggregation code only understands max for now"
+        assert aggregation in SUPPORTED_AGGRETATIONS
         metric_aggregations[metric_name] = aggregation
         query_res = query(
             _from=from_arrow,
@@ -62,8 +142,8 @@ def query_metrics(
             qry=f"{aggregation}:{metric_name}{{{filter_str}}}{group_by_str}",
             dd_api=dd_api,
         )
+        query_res_to_metric_data(query_res, metric_data, aggregation, metric_name)
 
-        query_res_to_metric_data(query_res, metric_data)
     return metric_aggregations, metric_data
 
 
@@ -85,20 +165,28 @@ def metric_data_to_rows(
     return output_list
 
 
-def query_res_to_metric_data(query_res, metric_data: Dict):
+def query_res_to_metric_data(
+    query_res, metric_data: Dict, aggregation: str, metric_name: str
+):
+    aggregators = {}
+    constructor = SUPPORTED_AGGRETATIONS[aggregation]
     for item in query_res["series"]:
         tagset_str = ",".join(item["tag_set"])
-        cur_metric = item["metric"]
+        assert item["metric"] == metric_name
 
         if tagset_str not in metric_data:
             metric_data[tagset_str] = {}
-        if cur_metric not in metric_data[tagset_str]:
-            metric_data[tagset_str][cur_metric] = -math.inf
+        if tagset_str not in aggregators:
+            aggregators[tagset_str] = constructor()
+
+        aggregator = aggregators[tagset_str]
         for point in item["pointlist"]:
             if point[1] is None:
                 continue
-            if point[1] > metric_data[tagset_str][cur_metric]:
-                metric_data[tagset_str][cur_metric] = point[1]
+            aggregator.on_value(point[1])
+
+    for tagset_str, aggregator in aggregators.items():
+        metric_data[tagset_str][metric_name] = aggregator.get_result()
 
 
 def main(args):
