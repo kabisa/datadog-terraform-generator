@@ -71,13 +71,13 @@ Generate the TF code for log metrics
 ## Autocompletions
 
 ```bash
-activate-global-python-argcomplete
+activate-global-python-argcomplete3
 ```
 
 add this to your `.bashrc` or `.zshrc` 
 
 ```bash
-eval "$(register-python-argcomplete ddtfgen)"
+eval "$(register-python-argcomplete3 ddtfgen)"
 ```
 
 ## Developing
